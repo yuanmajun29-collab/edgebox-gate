@@ -1,0 +1,31 @@
+****************************** mongodb 数据库信息 ***************************************************
+
+******control_manage_mission 集合******
+'''
+control_manage_mission
+{
+    control_id     布控任务标识 
+    control_name    布控名称
+    storage_time    告警保存时间
+    storage_num     告警保存数量
+    emergency_audio     告警音频
+    emergency_music_close_method    声音关闭方式 (1 报警1次,自动关闭 2 持续报警人工关闭)
+    emergency_response_time    告警响应时间
+    mission_status   标识任务状态 0 下发 1未下发
+    device_equ_info   控制器 json格式存储
+    add_mode    添加模式 1、多摄像机  2、多模型
+    create_time    创建时间
+    update_time    更新时间
+    update_user   更新人
+}
+'''
+
+******control_device_algorithm_associate 集合******
+'''
+control_device_algorithm_associate
+{
+    control_id     布控任务标识 
+    camera_id    摄像机ID
+    algorithm_constant_id    算法常量标识
+}
+'''

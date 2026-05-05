@@ -1,0 +1,7 @@
+#
+.idea/
+migrations/
+*.pyc
+/lishen
+/Utils/test.py
+test/

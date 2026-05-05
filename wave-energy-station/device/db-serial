@@ -1,0 +1,80 @@
+########odin_dynamic_device#######
+odin_dynamic_device
+
+漏电器
+表名:odin_dynamic_leakage
+{
+    device_id,
+    device_model,#设备型号
+    device_addr,设备地址号
+    device_status,设备状态
+    device_name, 名称
+    device_num, 序列号
+    distribution_num 配电箱参数
+    volt_type,电压类型
+    volt,电压正常范围 {'max':xxx,'min':xxx}
+    current,电流告警参数 {'max':xxx,'leak':xxx}
+    high_volt_alarm, 高压告警开关 {'phone':None,'sms':None,'audio':None}
+    low_volt_alarm, 低压告警开关 {'phone':None,'sms':None,'audio':None}
+    leakage_alarm, 漏电开关 {'phone':None,'sms':None,'audio':None}
+    crete_time,添加时间
+    update_time,更新时间
+}
+
+气体探测器
+表名:odin_dynamic_gas
+{
+    device_id,
+    device_model,#设备型号
+    device_addr,设备地址号
+    device_status,设备状态
+    device_name, 名称
+    device_num, 序列号
+    density 浓度报警阈值
+    high_density_alarm, 高浓度告警开关 {'phone':None,'sms':None,'audio':None}
+    crete_time,添加时间
+    update_time,更新时间
+}
+
+声光告警器
+表名:odin_dynamic_audio
+{
+    device_id,
+    add_type, 1,2  485方式添加/网络控制器
+    device_model,#设备型号
+    device_addr,设备地址号
+    device_status,设备状态
+    device_name, 名称
+    device_num 序列号
+    reset_delay_time,复位延迟
+    ip,控制器IP
+    port,端口
+    channel_number,通道编号
+    crete_time,添加时间
+    update_time,更新时间
+}
+
+副表
+表名:odin_dynamic_associate
+{
+    device_id,
+    device_type, 设备类型  1 2 3  气体探测器/断路器/静电接地器
+    phone_number,电话通知号码
+    sms_number,短信通知号码
+    audio_id, 声光告警器id
+}
+
+
+
+#################设备告警表###############
+odin_business_dynamic_emergency_record
+{
+    emergency_record_id, 
+    device_id, 
+    device_type, 1 2 3  气体探测器/断路器/静电接地器
+    device_name, 告警设备名称
+    emergency_context 告警内容
+    emergency_level 告警等级  1级 2级 None
+    emergency_type  告警类型  字符串
+    emergency_time  告警时间
+}

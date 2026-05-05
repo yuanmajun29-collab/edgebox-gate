@@ -1,0 +1,6 @@
+#
+test/
+.idea/
+migrations/
+*.pyc
+/Utils/test.py

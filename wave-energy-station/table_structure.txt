@@ -1,0 +1,271 @@
+#权限表
+CREATE TABLE `authority_permission` (
+  `permission_id` varchar(64) NOT NULL COMMENT '权限标示符',
+  `permission_name` varchar(64) DEFAULT NULL COMMENT '权限名称',
+  `permission_alias` varchar(2048) DEFAULT NULL,
+  `permission_origin_id` varchar(64) DEFAULT NULL COMMENT '母权限标示符',
+  PRIMARY KEY (`permission_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE `authority_role` (
+  `role_id` varchar(64) NOT NULL COMMENT '角色标示符',
+  `role_name` varchar(64) DEFAULT NULL COMMENT '角色名称',
+  `role_type` char(1) DEFAULT NULL COMMENT '角色类型 是否超级管理员 1：是 2：否',
+  `role_description` varchar(256) DEFAULT NULL COMMENT '角色描述',
+  `organization_id` varchar(64) DEFAULT NULL COMMENT '组织标识符',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`role_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='用户';
+
+CREATE TABLE `authority_role_permission_associate` (
+  `role_id` varchar(64) NOT NULL COMMENT '角色标示符',
+  `permission_id` varchar(64) DEFAULT NULL COMMENT '权限标示符',
+  UNIQUE KEY `UNIQUE` (`role_id`,`permission_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE `authority_user` (
+  `user_id` varchar(64) NOT NULL COMMENT '用户标示符',
+  `user_account` varchar(64) DEFAULT NULL COMMENT '用户账号 （同一组织内不可重复）',
+  `user_password` varchar(64) DEFAULT NULL COMMENT '用户密码（Hash密码）',
+  `open_id` varchar(64) DEFAULT NULL COMMENT '微信用户标示',
+  `user_sex` char(1) DEFAULT NULL COMMENT '用户性别 1：男 2：女',
+  `user_phone` varchar(32) DEFAULT NULL COMMENT '用户手机号',
+  `user_real_name` varchar(32) DEFAULT NULL COMMENT '用户名称',
+  `user_icon` varchar(255) DEFAULT NULL COMMENT '用户头像路径',
+  `user_idCard` varchar(32) DEFAULT NULL COMMENT '用户身份证号',
+  `remark` varchar(255) DEFAULT NULL COMMENT '备注信息',
+  `organization_id` varchar(64) DEFAULT NULL COMMENT '组织标识符',
+  `user_status` char(1) DEFAULT '1' COMMENT '用户状态 1开启 2关闭',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `last_modify_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`) USING BTREE,
+  UNIQUE KEY `UNIQUE-open_id` (`open_id`) USING BTREE,
+  UNIQUE KEY `UNIQUE-user_phone` (`user_phone`) USING BTREE,
+  UNIQUE KEY `UNIQUE-userIdCard` (`user_idCard`) USING BTREE,
+  UNIQUE KEY `UNIQUE-account_org` (`user_account`,`organization_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+--------------------------------------------------------------------------------------------------------------
+#工作状态表
+CREATE TABLE `authority_work_model` (
+  `organization_id` varchar(64) DEFAULT NULL COMMENT '组织id',
+  `device_sn` varchar(50) NOT NULL COMMENT '设备SN',
+  `model` int(4) DEFAULT '0' COMMENT '0表示单机模式，1表示联网模式',
+  `service_organization_id` varchar(64) DEFAULT NULL COMMENT '联网版服务对应的组织id',
+  `service_address` varchar(255) DEFAULT NULL COMMENT '服务地址',
+  `service_minio_address` varchar(255) DEFAULT NULL COMMENT '云平台minio地址',
+  `service_port` int(4) DEFAULT NULL COMMENT '服务端口',
+  `service_account` varchar(255) DEFAULT NULL,
+  `create_time` timestamp NULL DEFAULT NULL,
+  `last_modify_time` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`device_sn`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='工作模式表';
+--------------------------------------------------------------------------------------------------------------
+#布控任务表
+CREATE TABLE `odin_business_control_manage` (
+  `control_id` varchar(32) NOT NULL COMMENT '布控任务标识',
+  `control_name` varchar(100) DEFAULT NULL COMMENT '布控名称',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `create_user` varchar(50) DEFAULT NULL COMMENT '创建人',
+  `organization_id` varchar(32) DEFAULT NULL COMMENT '组织标识',
+  `bind_organization_id` varchar(50) DEFAULT NULL COMMENT '用户绑定的组织id',
+  `storage_time` int(11) DEFAULT NULL COMMENT '告警记录保存时间',
+  `storage_num` int(11) DEFAULT NULL COMMENT '告警记录保存数量',
+  `device_sn` varchar(50) CHARACTER SET utf8mb4 DEFAULT NULL COMMENT '设备Sn序列号',
+  PRIMARY KEY (`control_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE `work_flow_mission` (
+  `mission_id` varchar(50) NOT NULL COMMENT '任务标识符',
+  `mission_type` tinyint(11) DEFAULT NULL COMMENT '任务类型：0 门禁， 1 人证机考勤，2车载终端行为 ,3底库布控 ，4行为布控，5抓拍布控，6人证机门禁',
+  `algorithm_id` varchar(200) DEFAULT NULL COMMENT '算法标识符',
+  `mission_status` tinyint(1) DEFAULT NULL COMMENT '标识任务是否已经下发 0 下发 1未下发',
+  `organization_id` varchar(50) DEFAULT NULL COMMENT '组织机构标识',
+  `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
+  `mission_start_time` varchar(255) DEFAULT NULL,
+  `mission_end_time` varchar(255) DEFAULT NULL,
+  `emergency_audio` varchar(255) DEFAULT NULL COMMENT '告警音频',
+  `emergency_interval_time` varchar(255) DEFAULT NULL COMMENT '告警间隔时间',
+  `emergency_level` int(4) DEFAULT NULL COMMENT '告警等级(1表示一级，2表示二级，3表示三级)',
+  `emergency_music_close_method` int(4) DEFAULT NULL COMMENT '声音关闭方式 (1 报警1次，自动关闭 2 持续报警人工关闭)',
+  `device_equ_info` text COMMENT '控制器 json格式存储',
+  PRIMARY KEY (`mission_id`) USING BTREE,
+  UNIQUE KEY `mission_id` (`mission_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+--------------------------------------------------------------------------------------------------------------
+#设备表
+CREATE TABLE `odin_device_camera_edit` (
+  `camera_id` varchar(21) NOT NULL COMMENT '摄像机标示符',
+  `camera_ip` varchar(20) DEFAULT NULL COMMENT '摄像机ip',
+  `camera_mac` varchar(20) DEFAULT NULL COMMENT '摄像机mac',
+  `camera_account` varchar(100) DEFAULT NULL COMMENT '摄像机账户',
+  `camera_password` varchar(100) DEFAULT NULL COMMENT '摄像机密码',
+  `camera_remarks` varchar(255) DEFAULT NULL COMMENT '摄像机备注',
+  `create_time` datetime DEFAULT NULL COMMENT '摄像机创建时间',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `camera_ip_label` varchar(100) DEFAULT NULL,
+  `camera_num` varchar(42) DEFAULT NULL COMMENT '摄像机序列号',
+  `camera_status` char(1) DEFAULT NULL COMMENT '摄像机是否在线0在线 1下线2 未知',
+  `organization_id` varchar(64) DEFAULT NULL COMMENT '组织id',
+  `bind_organization_id` varchar(50) DEFAULT NULL COMMENT '用户绑定的组织id',
+  `videotape` int(1) DEFAULT '1' COMMENT '0激活1挂起，默认挂起',
+  `camera_name` varchar(128) DEFAULT NULL COMMENT '摄像机名称',
+  `extend_info` varchar(128) DEFAULT NULL COMMENT '第三方扩展信息',
+  `product_key` varchar(64) DEFAULT NULL COMMENT '产品信息标识',
+  `camera_type` char(2) DEFAULT '0' COMMENT '摄像头类型 0 固定摄像头  1  可移动摄像头 2 热成像摄像头',
+  `report_frequency` varchar(20) DEFAULT NULL COMMENT '上报轨迹点频率',
+  `camera_source` int(1) DEFAULT NULL COMMENT '摄像机来源 0 网络发现    1  手工添加',
+  `service_id` varchar(32) DEFAULT NULL COMMENT '算法服务器id',
+  `main_url` varchar(255) DEFAULT NULL COMMENT '摄像机拉流地址',
+  `set_type` int(1) DEFAULT NULL COMMENT '配置方式 0 组合方式 1 URL方式',
+  `rtsp_port` int(4) DEFAULT NULL COMMENT 'rtsp端口',
+  `encoding_format` int(1) DEFAULT NULL COMMENT '编码格式 0 h264 1 h265 ',
+  `code_stream` int(1) DEFAULT NULL COMMENT '码流 0 主码流 1 子码流 2 第三码流',
+  `live_url` varchar(80) DEFAULT NULL COMMENT '直播url',
+  `camera_login_status` tinyint(1) DEFAULT '0' COMMENT '摄像机登陆状态（0：默认值，1：已登录）',
+  `stream_url` varchar(255) DEFAULT NULL COMMENT '云眸流路径',
+  PRIMARY KEY (`camera_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+--------------------------------------------------------------------------------------------------------------
+#告警表
+DROP TABLE IF EXISTS `odin_business_dynamic_emergency_record`;
+CREATE TABLE `odin_business_dynamic_emergency_record` (
+  `emergency_record_id` varchar(32) NOT NULL COMMENT '告警记录id',
+  `point_id` varchar(32) DEFAULT NULL COMMENT '点位id',
+  `point_name` varchar(32) DEFAULT NULL COMMENT '安装点位',
+  `device_id` varchar(32) DEFAULT NULL COMMENT '设备id',
+  `device_type` int(11) DEFAULT NULL COMMENT '设备类型',
+  `device_name` varchar(20) DEFAULT NULL COMMENT '设备名称',
+  `emergency_context` varchar(100) DEFAULT NULL COMMENT '告警内容',
+  `emergency_time` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '告警时间',
+  `organization_id` varchar(32) DEFAULT NULL COMMENT '组织id',
+  PRIMARY KEY (`emergency_record_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='动态检测告警信息';
+
+CREATE TABLE `odin_business_emergency_record` (
+  `emergency_record_id` varchar(32) NOT NULL COMMENT '告警记录标识',
+  `emergency_level` varchar(32) DEFAULT NULL COMMENT '告警等级',
+  `emergency_position` varchar(256) DEFAULT NULL COMMENT '告警位置',
+  `emergency_media_info` varchar(255) DEFAULT NULL COMMENT '媒体视频信息',
+  `mission_id` varchar(32) DEFAULT NULL COMMENT '任务标识',
+  `emergency_time` varchar(32) DEFAULT NULL COMMENT '告警时间',
+  `alarm_status` char(1) DEFAULT '1' COMMENT '是否已报警 0：已报警  1：未报警',
+  `emergency_lon_and_lat` varchar(255) DEFAULT NULL COMMENT '告警位置经纬度',
+  `organization_id` varchar(32) DEFAULT NULL COMMENT '组织标识',
+  `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `model_name` varchar(64) DEFAULT NULL COMMENT '模型名称',
+  `model_path` varchar(64) DEFAULT NULL COMMENT '模型路径',
+  `emergency_audio` varchar(64) DEFAULT NULL COMMENT '告警音频',
+  `position_id` varchar(32) DEFAULT NULL COMMENT '位置标识',
+  `control_name` varchar(64) DEFAULT NULL COMMENT '布控任务名称',
+  `tid` varchar(64) DEFAULT NULL COMMENT '高德终端标识',
+  `trid` varchar(64) DEFAULT NULL COMMENT '高德轨迹标识',
+  `device_num` varchar(256) DEFAULT NULL COMMENT '设备序列号',
+  `storage_time` int(11) DEFAULT NULL COMMENT '告警存储天数',
+  `storage_num` int(11) DEFAULT NULL COMMENT '告警最大条数',
+  `device_id` varchar(32) DEFAULT NULL COMMENT '设备标识',
+  `device_name` varchar(64) DEFAULT NULL COMMENT '设备名称',
+  `emergency_exec_name` varchar(32) DEFAULT NULL COMMENT '处理人员',
+  `emergency_exec_desc` varchar(225) DEFAULT NULL COMMENT '警情记录',
+  `emergency_exec_result` varchar(225) DEFAULT NULL COMMENT '处理情况结果',
+  `emergency_exec_flag` int(4) DEFAULT '0' COMMENT '处理标识 0未处理 1已处理',
+  `emergency_music_close_method` int(4) DEFAULT NULL COMMENT '声音关闭方式 (1 报警1次，自动关闭 2 持续报警人工关闭)',
+  `emergency_music_close_status` int(4) DEFAULT '0' COMMENT '声音关闭状态 (0表示未关闭，1表示已关闭)',
+  `sub_source_id` varchar(32) DEFAULT NULL COMMENT '图片标识id',
+  `false_alarm_status` char(1) DEFAULT '0' COMMENT '误报标识：0：未标识   1：已标识',
+  PRIMARY KEY (`emergency_record_id`) USING BTREE,
+  KEY `idx_orgId_emergencytime_level` (`organization_id`,`emergency_time`,`emergency_level`) USING BTREE,
+  KEY `idx_emergencytime_tid_deviceid` (`emergency_time`,`tid`,`device_id`) USING BTREE,
+  KEY `index_sub_source_id` (`sub_source_id`) USING BTREE,
+  KEY `create_time` (`create_time`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE `odin_device_camera_edit` (
+  `camera_id` varchar(21) NOT NULL COMMENT '摄像机标示符',
+  `camera_ip` varchar(20) DEFAULT NULL COMMENT '摄像机ip',
+  `camera_mac` varchar(20) DEFAULT NULL COMMENT '摄像机mac',
+  `camera_account` varchar(100) DEFAULT NULL COMMENT '摄像机账户',
+  `camera_password` varchar(100) DEFAULT NULL COMMENT '摄像机密码',
+  `camera_remarks` varchar(255) DEFAULT NULL COMMENT '摄像机备注',
+  `create_time` datetime DEFAULT NULL COMMENT '摄像机创建时间',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `camera_ip_label` varchar(100) DEFAULT NULL,
+  `camera_num` varchar(42) DEFAULT NULL COMMENT '摄像机序列号',
+  `camera_status` char(1) DEFAULT NULL COMMENT '摄像机是否在线0在线 1下线2 未知',
+  `organization_id` varchar(64) DEFAULT NULL COMMENT '组织id',
+  `bind_organization_id` varchar(50) DEFAULT NULL COMMENT '用户绑定的组织id',
+  `videotape` int(1) DEFAULT '1' COMMENT '0激活1挂起，默认挂起',
+  `camera_name` varchar(128) DEFAULT NULL COMMENT '摄像机名称',
+  `extend_info` varchar(128) DEFAULT NULL COMMENT '第三方扩展信息',
+  `product_key` varchar(64) DEFAULT NULL COMMENT '产品信息标识',
+  `camera_type` char(2) DEFAULT '0' COMMENT '摄像头类型 0 固定摄像头  1  可移动摄像头 2 热成像摄像头',
+  `report_frequency` varchar(20) DEFAULT NULL COMMENT '上报轨迹点频率',
+  `camera_source` int(1) DEFAULT NULL COMMENT '摄像机来源 0 网络发现    1  手工添加',
+  `service_id` varchar(32) DEFAULT NULL COMMENT '算法服务器id',
+  `main_url` varchar(255) DEFAULT NULL COMMENT '摄像机拉流地址',
+  `set_type` int(1) DEFAULT NULL COMMENT '配置方式 0 组合方式 1 URL方式',
+  `rtsp_port` int(4) DEFAULT NULL COMMENT 'rtsp端口',
+  `encoding_format` int(1) DEFAULT NULL COMMENT '编码格式 0 h264 1 h265 ',
+  `code_stream` int(1) DEFAULT NULL COMMENT '码流 0 主码流 1 子码流 2 第三码流',
+  `live_url` varchar(80) DEFAULT NULL COMMENT '直播url',
+  `camera_login_status` tinyint(1) DEFAULT '0' COMMENT '摄像机登陆状态（0：默认值，1：已登录）',
+  `stream_url` varchar(255) DEFAULT NULL COMMENT '云眸流路径',
+  `nvr_channel` varchar(5) DEFAULT NULL COMMENT 'nvr通道',
+  PRIMARY KEY (`camera_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE `odin_device_sound` (
+  `sound_id` varchar(32) NOT NULL COMMENT '告警音箱标识',
+  `sound_type` char(1) DEFAULT NULL COMMENT '音箱类型(1：ITC音响，2：菱声音响)',
+  `sound_name` varchar(50) DEFAULT NULL COMMENT '音箱名称',
+  `sound_no` varchar(50) DEFAULT NULL COMMENT '音箱序列号',
+  `area_id` varchar(32) DEFAULT NULL COMMENT '区域ID',
+  `sound_ip` varchar(20) DEFAULT NULL COMMENT '音箱IP',
+  `sound_port` int(11) DEFAULT NULL COMMENT '音箱端口号',
+  `sound_account` varchar(50) DEFAULT NULL COMMENT '账号',
+  `sound_password` varchar(50) DEFAULT NULL COMMENT '密码',
+  `sound_status` char(1) DEFAULT NULL COMMENT '设备状态是否在线0在线 1下线2 未知',
+  `talk_number` varchar(20) DEFAULT NULL COMMENT '对讲号码',
+  `organization_id` varchar(32) DEFAULT NULL COMMENT '组织标识',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `end_point_id` varchar(16) DEFAULT NULL COMMENT '音箱终端id',
+  PRIMARY KEY (`sound_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='告警音箱表';
+
+CREATE TABLE `odin_dynamic_device` (
+  `device_id` varchar(32) NOT NULL COMMENT '设备id',
+  `point_id` varchar(32) NOT NULL COMMENT '安装点位id',
+  `model_id` varchar(32) DEFAULT NULL COMMENT '设备型号id',
+  `device_type` int(11) DEFAULT NULL COMMENT '设备类型 1：烟雾传感器，2：浸水传感器，3：温度传感器，4：漏电断路器，5：气体探测器，6：静电接地器',
+  `device_name` varchar(20) DEFAULT NULL COMMENT '设备名称',
+  `device_num` varchar(10) DEFAULT NULL COMMENT '设备序列号，只能是八位数字',
+  `device_status` tinyint(1) DEFAULT '1' COMMENT '设备状态 0 在线  1 离线',
+  `mac_addr` varchar(20) DEFAULT NULL COMMENT 'mak地址',
+  `controller_port` int(11) DEFAULT NULL COMMENT '网络控制器端口',
+  `emergency_interval_time` int(11) DEFAULT NULL COMMENT '告警间隔时间',
+  `sound_id` varchar(2000) DEFAULT NULL COMMENT '音箱id',
+  `sound_times` int(11) DEFAULT NULL COMMENT '音箱播报次数',
+  `sound_context` varchar(100) DEFAULT NULL COMMENT '音箱播报内容',
+  `organization_id` varchar(32) DEFAULT NULL COMMENT '组织id',
+  `sound_switch` tinyint(1) DEFAULT NULL COMMENT '音箱开关 0 开 1关',
+  `create_time` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  `temperature_max` int(10) DEFAULT NULL COMMENT '最高温度',
+  `temperature_min` int(10) DEFAULT NULL COMMENT '最低温度',
+  PRIMARY KEY (`device_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='动态监测设备';
+---------------------------------------------------------------------------------------
+CREATE TABLE `odin_advise_sms_delivery` (
+  `sms_delivery_id` varchar(32) NOT NULL COMMENT '短信投递标识',
+  `sms_delivery_name` varchar(64) DEFAULT NULL COMMENT '短信投递名称',
+  `delivery_content` varchar(32) DEFAULT NULL COMMENT '投递内容，以逗号拼接 1：告警时间 2：设备名称 3：告警位置 4:布控任务名称 5:感知模型 6:识别路径 7:告警图片',
+  `delivery_phones` varchar(256) DEFAULT NULL COMMENT '投递手机号，以逗号拼接',
+  `trigger_condition` varchar(1024) DEFAULT NULL COMMENT '触发条件',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `organization_id` varchar(32) DEFAULT NULL COMMENT '组织标识符',
+  `bind_organization_id` varchar(32) DEFAULT NULL COMMENT '绑定组织标识符',
+  'delivery_type' tinyint(1) DEFAULT NULL COMMENT '投递类型 1 电话通知',
+  'delivery_status' tinyint(1) DEFAULT NULL COMMENT '投递状态 0开启 1关闭 ',
+  PRIMARY KEY (`sms_delivery_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='短信投递';
+

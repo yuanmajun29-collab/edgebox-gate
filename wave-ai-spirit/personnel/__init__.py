@@ -1,0 +1,1 @@
+from .personnel_route import  bp as personnel_bp

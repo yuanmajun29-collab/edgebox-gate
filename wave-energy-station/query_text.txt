@@ -1,0 +1,15 @@
+db.odin_business_emergency_record.find(
+ {
+ 'create_time': {
+ '$gte': ISODate("2023-12-21T00:00:00Z"),
+ '$lte': ISODate("2023-12-21T23:59:59Z")
+ }
+})
+
+db.odin_business_emergency_record.find(
+ {
+ 'create_time': {
+ '$gte': ISODate("2023-12-21T00:00:00Z"),
+ '$lte': ISODate("2023-12-21T23:59:59Z")
+ }
+}).sort({ 'create_time': -1 }).limit(5)
