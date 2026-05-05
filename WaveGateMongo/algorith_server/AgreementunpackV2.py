@@ -83,16 +83,16 @@ def judge_cache_2(msg_cache, mongo, mqtt_client, sms, webhook, re_pool):
         msg_body = msg_cache[55:length]
         msg_type = msg_cache[18:23]
         print("[%s]" % datetime.now(), '--msg_type:', msg_type)
-        if msg_type == "03008":
+        if msg_type == b"03008":
             # 人脸特征信息存入队列
             faceidentification_queue.put(msg_body)
-        if msg_type == "03001":
+        if msg_type == b"03001":
             print('----msg_body:', msg_body)
             result = handle_3001_msg(msg_body, mongo)
             from algorith_server.AlgorithServer_new import SenderThread
             sender = SenderThread(context=None)
             sender.start_controls_message()
-        if msg_type == "04002":
+        if msg_type == b"04002":
             result = handle_msg(msg_body, mongo, mqtt_client, sms, webhook, re_pool)
         len_msg = 55 + len_body
         msg_cache = msg_cache[len_msg:]
@@ -106,24 +106,24 @@ def handle_alg_send_message(msg_cache, mongo, mqtt_client, sms, webhook, re_pool
         msg_body = msg_cache[55:]
         msg_type = msg_cache[18:23]
         mainlogger.debug('--handle_alg_send_message msg_type: {}, msg_total_length: {}'.format(msg_type, len(msg_cache)))
-        if msg_type == "03008":
+        if msg_type == b"03008":
             # 人脸特征信息存入队列
             mainlogger.debug('--msgBody: %s' % msg_body)
             faceidentification_queue.put(msg_body)
-        elif msg_type == "03001":
-            mainlogger.debug('----msg_body : ' + msg_body)
+        elif msg_type == b"03001":
+            mainlogger.debug('----msg_body : %s' % msg_body)
             handle_3001_msg(msg_body, mongo)
             from algorith_server.AlgorithServer_new import SenderThread
             sender = SenderThread(context=None)
             sender.start_controls_message()
-        elif msg_type == "03002":
+        elif msg_type == b"03002":
             re_pool.setex('alg_status', 90, 1)
-        elif msg_type == "04002":
+        elif msg_type == b"04002":
             handle_msg(msg_body, mongo, mqtt_client, sms, webhook, re_pool)
-        elif msg_type == "04003":
+        elif msg_type == b"04003":
             msg = json.loads(msg_body)
             mainlogger.debug("--crowdEmergency:%s" % msg)
-        elif msg_type == "04004":
+        elif msg_type == b"04004":
             msg = json.loads(msg_body)
             mainlogger.debug("--smallPlaceEmergency:%s" % msg)
             handle_4004_msg(msg, my_db=mongo)

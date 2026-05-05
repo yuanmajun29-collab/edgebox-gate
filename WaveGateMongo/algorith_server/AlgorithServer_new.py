@@ -32,7 +32,8 @@ class AlgorithServerNew(threading.Thread):
             AlgorithServerNew.__flag = True
             self.message_header_length = 55
             self.conn_list = []
-            self.alg_msg_head = "#!0155"
+            # 协议按字节定界，必须为 bytes；decode 成 str 后 len() 为字符数，UTF-8 中文会导致与包头长度不一致
+            self.alg_msg_head = b"#!0155"
             self.alg_socket_cache = dict()
             self.context = context
             self.my_db = ToMongo('wavedevice')
@@ -103,7 +104,7 @@ class AlgorithServerNew(threading.Thread):
 
     # 根据消息头进行消息切片
     def handle_message_splice(self, recv_message):
-        last_message, new_message = "", ""
+        last_message, new_message = b"", b""
         # 判断是否包含消息头
         if self.alg_msg_head in recv_message:
             head_index = recv_message.index(self.alg_msg_head)
@@ -229,21 +230,17 @@ class AlgorithServerNew(threading.Thread):
         try:
             mainlogger.debug("========receive alg message============")
             recv_data = client_socket.recv(65536)
-            mainlogger.debug("接收到ALG客户端消息，消息内容：{}，消息长度：{}".format(recv_data, len(recv_data)))
+            preview = recv_data[:120]
+            mainlogger.debug(
+                "接收到ALG客户端消息，字节长度：{}，前缀(hex)：{}".format(
+                    len(recv_data), preview.hex() if preview else ""
+                )
+            )
             if not recv_data:
                 mainlogger.debug("ALG客户端{}已经断开连接。".format(client_socket))
                 self.handle_alg_client_close(client_socket)
             else:
-                alg_decode_data = recv_data.decode()
-                self.cache_handle_alg_message(client_socket, alg_decode_data)
-                
-                # errors="replace" 防止半包截断中文时崩溃，
-                # 用 U+FFFD (?) 替代无法解码的字节
-                # alg_decode_data = recv_data.decode("utf-8", errors="replace")
-                # mainlogger.debug(
-                #     "解码后字符长度:{}, 内容:{}".format(len(alg_decode_data), alg_decode_data)
-                # )
-                # self.cache_handle_alg_message(client_socket, alg_decode_data)
+                self.cache_handle_alg_message(client_socket, recv_data)
         except ConnectionResetError:
             mainlogger.error("alg客户端连接被重置。")
             self.handle_alg_client_close(client_socket)

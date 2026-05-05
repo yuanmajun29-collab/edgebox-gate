@@ -77,25 +77,27 @@ class AlgorithServer():
         while True:
             if len(self.conn_list) > 0:
                 for conn in self.conn_list:
-                    msg_cache = ""
+                    msg_cache = b""
                     while True:
                         try:
                             data = conn.recv(65536)
                             conn_ip = conn.getpeername()[0]
                             mainlogger.debug(
-                                "===============接收到alg端{}数据: {},长度:{}".format(conn_ip, data, len(data)))
+                                "===============接收到alg端{}数据长度:{},前缀hex:{}".format(
+                                    conn_ip, len(data), data[:64].hex() if data else ""
+                                )
+                            )
                             if not data:
                                 break
                         except Exception as e:
                             mainlogger.debug('接受告警数据出错:%s' % e)
                             break
-                        msg = data.decode()
-                        msg_head = msg[0:2]
-                        if msg_head == '#!' and msg_cache:
-                            msg_cache = ""
-                            msg_cache += msg
+                        msg_head = data[0:2]
+                        if msg_head == b'#!' and msg_cache:
+                            msg_cache = b""
+                            msg_cache += data
                         else:
-                            msg_cache = msg_cache + msg
+                            msg_cache = msg_cache + data
 
                         msg_cache = judge_cache(msg_cache, mongo=self.my_db, mqtt_client=self.client,
                                                 sms=self.Sms_sender, webhook=self.web_sender, re_pool=self.re_pool)
