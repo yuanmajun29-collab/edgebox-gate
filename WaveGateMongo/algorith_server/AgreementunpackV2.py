@@ -75,8 +75,6 @@ def write_hot_image(image_id, emergency_dir, hot_jpg):
 
 def handle_alg_send_message(msg_cache, mongo, mqtt_client, sms, webhook, re_pool):
     try:
-        mongo = mongo
-        mqtt_client = mqtt_client
         msg_body = msg_cache[55:]
         msg_type = msg_cache[18:23]
         mainlogger.debug('--handle_alg_send_message msg_type: {}, msg_total_length: {}'.format(msg_type, len(msg_cache)))
@@ -105,7 +103,6 @@ def handle_alg_send_message(msg_cache, mongo, mqtt_client, sms, webhook, re_pool
         mainlogger.debug("handle_alg_send_message error: {}".format(e))
 
 
-# import datetime
 import pytz
 
 

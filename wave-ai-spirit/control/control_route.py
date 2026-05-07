@@ -26,15 +26,6 @@ def find_asso_cam(cam_col,mission_device_col,cameraNname):
     cam_list = mission_device_col.distinct('mission_id',query2)
     return cam_list
 
-# def find_asso_cam(cam_col,mission_device_col,cameraNname):
-#     res = cam_col.find({"camera_name":{"$regex":cameraNname}})
-#     cam_list = []
-#     for x in res:
-#         mission_list = mission_device_col.find({"device_id":x['camera_id']})
-#         for x2 in mission_list:
-#             cam_list.append(x2['mission_id'])
-#     return cam_list
-
 def find_asso_alg(constant_col,instance_col,algNname):
     if not algNname:
         alg_list = instance_col.distinct('mission_id')
@@ -44,15 +35,6 @@ def find_asso_alg(constant_col,instance_col,algNname):
     query2 = {'algorithm_constant_num':{'$in':res}}
     alg_list = instance_col.distinct('mission_id',query2)
     return alg_list
-    
-# def find_asso_alg(constant_col,instance_col,algNname):
-#     res2 = constant_col.find({"algorithm_constant_name":{"$regex":algNname}})
-#     alg_list = []
-#     for y in res2:
-#         algnum_list = instance_col.find({"algorithm_constant_num":y['algorithm_constant_num']})
-#         for y2 in algnum_list:
-#             alg_list.append(y2['mission_id'])
-#     return alg_list
 
 # 布控任务
 @bp.route('/control/getControlItemList', methods=['GET','POST'])

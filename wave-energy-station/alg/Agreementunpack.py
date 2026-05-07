@@ -79,9 +79,6 @@ def write_hot_image(image_id,emergency_dir,hot_jpg):
     return 
 
 def judge_cache(msg_cache,mongo,mqtt_client,sms,webhook,re_pool):
-        mongo = mongo
-        mqtt_client = mqtt_client
-
         while msg_cache:
             cache_head = msg_cache[0:2]
             msg_left = msg_cache[2:]

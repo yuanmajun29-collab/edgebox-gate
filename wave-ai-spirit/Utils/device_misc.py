@@ -129,22 +129,6 @@ def response_bad_request(note=''):
         status_code=HTTPStatus.BAD_REQUEST
     )
 
-# def decode_base64_str(image_base64str):
-#     image_base64str = image_base64str.split(',')[-1]
-#     image_base64 = base64.b64decode(image_base64str)
-#     nparr = np.fromstring(image_base64, np.uint8)
-#     image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-#     return image
-
-# def decode_binary(image_binary):
-
-#     if isinstance(image_binary, bytes):
-#         nparr = np.fromstring(image_binary, np.uint8)
-#     else:
-#         nparr = np.fromfile(image_binary, np.uint8)
-#     image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-#     return image
-
 def url_to_binary(url):
     with urllib.request.urlopen(url) as response:
         binary = response.read()

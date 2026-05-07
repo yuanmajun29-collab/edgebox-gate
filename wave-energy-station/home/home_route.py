@@ -29,18 +29,6 @@ def getMisstionCount():
     return jsonify(response_data)
 
 
-# @bp.route('/personnel/getPersonnelSize', methods=['GET','POST'])
-# @login_required
-# def getPersonnelSize():
-#     '''
-#     接口说明：首页查询底库人员数量
-#     状态：未完成
-#     '''
-#     print('getPersonnelSize', request.data)
-#     getPersonnelSize = json.dumps( GET_PERSONNEL_SIZE )
-#     return getPersonnelSize
-
-
 @bp.route('/advise/getAdviseRecord', methods=['GET', 'POST'])
 @login_required
 def getAdviseRecord():

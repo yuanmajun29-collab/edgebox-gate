@@ -799,18 +799,6 @@ def deleteUnderlay():
     response_data = set_success_result()
     return jsonify(response_data)
 
-# @bp.route('/vidicon/testwebhook', methods=['GET','POST'])
-# def testwebhook():
-#     '''
-#     接口说明：验证告警转发
-#     '''
-#     params = request.get_json()
-
-#     print("-------webhook test!!!!")
-#     print(params)
-#     response_data = {"code":1234}
-#     return jsonify(response_data)
-
 view_func = UnderlayImageDBAPI.as_view(('{}_api').format('underlay'))
 bp.add_url_rule(('/{}/<string:{}>').format('underlay', 'image_id'), view_func=view_func,methods=['GET', 'PUT', 'DELETE'])
 

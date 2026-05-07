@@ -181,26 +181,6 @@ class LingsSound:
         result = requests.get(url, headers=header, timeout=2).json()
         return result
 
-    # def playTTS(self,content):
-    #     mp3_url = "%s/tts_xf.single?text=%s&voice_name=xiaoyan&speed=50&volume=100"%(self.server_url,content)
-    #     data = dict()
-    #     data['sn'] = self.sound_no
-    #     data['type'] = 'req'
-    #     data['name'] = 'songs_queue_append'
-    #     params = dict()
-    #     params['tid'] = uuid.uuid4().hex
-    #     params['vol'] = self.volume
-    #     params['urls'] = [{'name':'告警语音.mp3','uri':mp3_url}]
-    #     data['params'] = params
-    #     header = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko',"Content-Type": "application/json"}
-    #     try:
-    #         result = requests.post(self.client_url,json.dumps(data),headers=header,verify=False)
-    #         mainlogger.info('LinsSound playtts : %s'%result.json())
-    #     except requests.exceptions.Timeout or requests.exceptions.ConnectionError:
-    #         time.sleep(1)
-    #         result = requests.post(self.client_url,json.dumps(data),headers=header,verify=False)
-    #     return result
-
     def getDeviceBySN(self, sound_no):
         params = {
             "type": "req",

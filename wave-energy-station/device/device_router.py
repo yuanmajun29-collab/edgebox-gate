@@ -762,18 +762,6 @@ def saveNvrUrl():
     return jsonify(response)
 
 
-# @bp.route('/vidicon/testwebhook', methods=['GET','POST'])
-# def testwebhook():
-#     '''
-#     接口说明：验证告警转发
-#     '''
-#     params = request.get_json()
-
-#     print("-------webhook test!!!!")
-#     print(params)
-#     response_data = {"code":1234}
-#     return jsonify(response_data)
-
 cs = CheckInService()  # 启动查询摄像头状态进程
 if __name__ == '__main__':
     app = Flask(__name__, static_url_path='')
