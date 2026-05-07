@@ -147,10 +147,6 @@ def judge_cache(msg_cache,mongo,mqtt_client,sms,webhook,re_pool):
 def handle_msg(msg_body,mongo:ToMongo,mqtt_client:mqtt.Client,sms:SendSmsResqueset,webhook:Sendwebrequest,re_pool:redis.Redis):
 
         my_db = mongo
-        mqtt_client = mqtt_client
-        sms_sender = sms
-        web_sender = webhook
-        re_pool = re_pool
         msg_body = json.loads(msg_body)
 
         emergency_time_stamp = msg_body['algorithm_time']
@@ -451,48 +447,6 @@ def points_transform(pt:list):
         points.append(item)
     return points
 
-def find_associate_mission(mission_list:list,alg_num,alg_col,mission_col):
-    '''
-    说明：算法发来的告警信息，找到匹配的布控任务
-    '''
-    if len(mission_list) == 1:
-        return mission_list[0]['mission_id']
-    for mission in mission_list:
-        mission_id = mission['mission_id']
-        mission_item = mission_col.find_one({"mission_id":mission_id})
-        if mission_item['mission_status'] != 0:   #属于未下发状态
-            continue
-        query_mission = {"mission_id":mission_id,"is_use":1,"algorithm_constant_num":alg_num}
-        alg_associate = alg_col.find(query_mission)
-        if alg_associate.count() == 0:
-            continue
-        else:
-            return mission_id
-    return
-
-def find_associate_mission2(device_id,alg_num,alg_col,mission_col,asso_col):
-    '''
-    说明：算法发来的告警信息，找到匹配的布控任务
-    '''
-    res = list()
-    result_mission = list()
-    min_interval = 0
-    mission_items = mission_col.find({'mission_status':0}).sort('emergency_interval_time')
-    for mission_item in mission_items:
-        mission_id = mission_item['mission_id']
-        query1 = {'device_id':device_id,'mission_id':mission_id}
-        asso_item = asso_col.find_one(query1)
-        if not asso_item:
-            continue
-        query2 = {'algorithm_constant_num':alg_num,"is_use":1,'mission_id':mission_id}
-        alg_items = alg_col.find_one(query2)
-        if not alg_items:
-            continue
-        item_interval = mission_item['emergency_interval_time']
-        if not res or item_interval == min_interval:
-            res.append(mission_item['mission_id'])
-            min_interval = mission_item['emergency_interval_time']
-    return res
 
 def find_associate_mission3(device_id,alg_num,alg_col,mission_col,asso_col):
     '''
