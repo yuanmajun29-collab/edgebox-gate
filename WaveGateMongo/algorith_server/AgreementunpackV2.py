@@ -396,6 +396,51 @@ def _build_emergency_db_payloads(
     return emergency_record_id, emergency_record_detail_info_id, data1, data2
 
 
+def _dispatch_emergency_after_db_write(
+        my_db, mqtt_client, sms, webhook,
+        work_model, url, minio_url, bind_organizationid,
+        emergency_col, emergency_detail_col, mission_id, storage_time, storage_num,
+        emergency_dir, image_byte,
+        constant_item, info_list, data1, data2, organization_id,
+        control_name, model_path, device_name, emergency_position, emergency_time,
+        image_base64, emergency_image, device_id, emergency_record_id, position_id):
+    if work_model == '1':
+        submit_thread = Thread(target=emergency_sync,
+                               args=[url, minio_url, emergency_dir, image_byte, data1, data2,
+                                     bind_organizationid])
+        submit_thread.start()
+
+    delete_thread = Thread(target=delete_overdate_emergency,
+                           args=[emergency_col, emergency_detail_col, mission_id, storage_time,
+                                 storage_num])
+    delete_thread.start()
+
+    alarm_thread = Thread(target=equip_alarm, args=[my_db, mission_id, constant_item])
+    alarm_thread.start()
+
+    if emergency_popchoice():
+        publish_mqtt_thread = Thread(target=publish_mqtt,
+                                     args=[mqtt_client, info_list, data1, data2, organization_id])
+        publish_mqtt_thread.start()
+
+    sms_msg = {"controlName": control_name,
+               "modelName": model_path,
+               "modelPath": model_path,
+               "deviceName": device_name,
+               "adress": emergency_position,
+               "time": emergency_time,
+               "emergencyImage": image_base64,
+               "emergencyImageUrls": emergency_image,
+               'controlId': mission_id,
+               'deviceId': device_id,
+               'modelId': constant_item['algorithm_constant_id'],
+               'emergencyId': emergency_record_id,
+               'positionId': position_id,
+               }
+    deliver_emergency_notifications(sms, webhook, sms_msg, organization_id,
+                                    emergency_record_id)
+
+
 def handle_msg(msg_body, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSmsResqueset, webhook: Sendwebrequest,
                re_pool: redis.Redis):
     try:
@@ -544,45 +589,15 @@ def handle_msg(msg_body, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSmsR
                     my_db.insert('odin_business_emergency_record',
                                  data1
                                  )
-                    # 判断工作模式，是否需要提交到远程
-                    if work_model == '1':
-                        submit_thread = Thread(target=emergency_sync,
-                                               args=[url, minio_url, emergency_dir, image_byte, data1, data2,
-                                                     bind_organizationid])
-                        submit_thread.start()
-
-                    # 删除过期告警和超过存储数目的告警
-                    delete_thread = Thread(target=delete_overdate_emergency,
-                                           args=[emergency_col, emergency_detail_col, mission_id, storage_time,
-                                                 storage_num])
-                    delete_thread.start()
-
-                    # 发送声光告警
-                    Alarm_thread = Thread(target=equip_alarm, args=[my_db, mission_id, constant_item])
-                    Alarm_thread.start()
-
-                    if emergency_popchoice():
-                        # 发布弹窗
-                        publish_mqtt_thread = Thread(target=publish_mqtt,
-                                                     args=[mqtt_client, info_list, data1, data2, organization_id])
-                        publish_mqtt_thread.start()
-
-                    sms_msg = {"controlName": control_name,
-                               "modelName": model_path,
-                               "modelPath": model_path,
-                               "deviceName": device_name,
-                               "adress": emergency_position,
-                               "time": emergency_time,
-                               "emergencyImage": image_base64,
-                               "emergencyImageUrls": emergency_image,
-                               'controlId': mission_id,
-                               'deviceId': device_id,
-                               'modelId': constant_item['algorithm_constant_id'],
-                               'emergencyId': emergency_record_id,
-                               'positionId': position_id,
-                               }
-                    deliver_emergency_notifications(sms, webhook, sms_msg, organization_id,
-                                                    emergency_record_id)
+                    _dispatch_emergency_after_db_write(
+                        my_db, mqtt_client, sms, webhook,
+                        work_model, url, minio_url, bind_organizationid,
+                        emergency_col, emergency_detail_col, mission_id, storage_time, storage_num,
+                        emergency_dir, image_byte,
+                        constant_item, info_list, data1, data2, organization_id,
+                        control_name, model_path, device_name, emergency_position, emergency_time,
+                        image_base64, emergency_image, device_id, emergency_record_id, position_id,
+                    )
 
         mainlogger.debug('--alarm_type: ' + str(alarm_algs))
         return
