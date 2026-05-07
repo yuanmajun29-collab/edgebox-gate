@@ -1,6 +1,12 @@
 import json
 import requests
 from config import BASE_INFO
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    CONTROL_DEVICE_ALGORITHM_ASSOCIATE,
+    CONTROL_MANAGE_MISSION,
+    WORK_FLOW_ALGORITHM_CONSTANT,
+)
 from algorith_server.redis_connect import redis_database
 from system.system_misc import *
 from Utils.Utils import set_fail_result, set_success_result
@@ -100,8 +106,8 @@ def init_data_version(my_db: ToMongo):
 
 def deleteAllData(my_db: ToMongo):
     # 删除布控任务信息
-    my_db.delete("control_manage_mission", {}, is_one=False)
-    my_db.delete("control_device_algorithm_associate", {}, is_one=False)
+    my_db.delete(CONTROL_MANAGE_MISSION, {}, is_one=False)
+    my_db.delete(CONTROL_DEVICE_ALGORITHM_ASSOCIATE, {}, is_one=False)
 
     # 删除摄像头信息
     my_db.delete("odin_device_camera_edit", {}, is_one=False)
@@ -172,7 +178,7 @@ def deleteAllData(my_db: ToMongo):
 
 def get_constant_entity(my_db: ToMongo):
     try:
-        items = my_db.get_col('work_flow_algorithm_constant').find()
+        items = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT).find()
         entities = list()
         for item in items:
             constant_item = database_to_dict(item,constant_database,constant_web)
@@ -207,7 +213,7 @@ def query_edge_service(my_db: ToMongo, ststus="0"):
     item['algorithmConstantList'] = constant_entity
     name = host_ip.split('.')[3]
     item['deviceName'] = item['deviceName'] + '-' + name
-    alg_list = my_db.get_keyvalues("work_flow_algorithm_constant", "algorithm_constant_num")
+    alg_list = my_db.get_keyvalues(WORK_FLOW_ALGORITHM_CONSTANT, "algorithm_constant_num")
     item['algorithm'] = ";".join(alg_list)
     content = {"organizationId": item['organizationId'],
                "cpuSn": item['serialNumber']}

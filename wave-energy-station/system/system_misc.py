@@ -10,6 +10,12 @@ from datetime import datetime, timedelta
 from Utils.datacfg import *
 import Utils.logger as logger
 from config import PERSON_IMG_URL, FACE_IDENT_URL, EMERGENCY_IMG_PATH, DISK_PATH,BASE_INFO
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    CONTROL_DEVICE_ALGORITHM_ASSOCIATE,
+    CONTROL_MANAGE_MISSION,
+    WORK_FLOW_ALGORITHM_CONSTANT,
+)
 from algorith_server.Alibabasms import SendSmsResqueset
 
 mainlogger = logger.getLogger("main")
@@ -487,8 +493,8 @@ def get_control_info(my_db:ToMongo):
     """
     导出配置管理中的布控信息
     """
-    mission_col = my_db.get_col("control_manage_mission")
-    device_asso_col = my_db.get_col("control_device_algorithm_associate")
+    mission_col = my_db.get_col(CONTROL_MANAGE_MISSION)
+    device_asso_col = my_db.get_col(CONTROL_DEVICE_ALGORITHM_ASSOCIATE)
 
     controlManageEntity = {}
     controlManageEntity['workFlowMissionVos'] = []
@@ -739,7 +745,7 @@ def insert_alg_info(my_db: ToMongo, algorithmConstantEntityList):
             entity['algorithmSoundType'] = 1
         query = {'algorithm_service_num': algorithmServiceNum}
         item = database_to_dict3(entity, constant_web, constant_database)
-        my_db.update('work_flow_algorithm_constant', query, {'$set': item})
+        my_db.update(WORK_FLOW_ALGORITHM_CONSTANT, query, {'$set': item})
     return
 
 
@@ -806,7 +812,7 @@ def insert_constant_info(my_db: ToMongo, algorithmConstantEntityList):
         for item in algorithmConstantEntityList:
             item = database_to_dict2(item, constant_web, constant_database)
             query = {'algorithm_service_num': item.get('algorithm_service_num')}
-            my_db.update('work_flow_algorithm_constant', query, {'$set': item})
+            my_db.update(WORK_FLOW_ALGORITHM_CONSTANT, query, {'$set': item})
     except Exception as e:
         mainlogger.info("同步algorithmConstantEntityList error:%s" % e)
     return
@@ -824,26 +830,26 @@ def insert_control_info(my_db:ToMongo,controlManageEntity):
     audioDeviceList = controlManageEntity.get("audioDeviceList",None)
     dynamicAssoList = controlManageEntity.get("dynamicAssoList",None)
 
-    my_db.delete("control_manage_mission",{},is_one=False)
+    my_db.delete(CONTROL_MANAGE_MISSION,{},is_one=False)
     if  workFlowMissionVos:
         for item in workFlowMissionVos:
             try:
                 missions_item = database_to_dict(item,mission_web,mission_database)
                 missions_item['create_time'] = trans2date(missions_item['create_time'])
                 missions_item['update_time'] = trans2date(missions_item['update_time'])
-                my_db.insert("control_manage_mission",missions_item)
+                my_db.insert(CONTROL_MANAGE_MISSION,missions_item)
             except Exception as e:
-                print('Insert Error---control_manage_mission:',e)
+                print('Insert Error---' + CONTROL_MANAGE_MISSION + ':',e)
                 continue
     
-    my_db.delete("control_device_algorithm_associate",{},is_one=False)
+    my_db.delete(CONTROL_DEVICE_ALGORITHM_ASSOCIATE,{},is_one=False)
     if  deviceAssociateList:
         for item in deviceAssociateList:
             try:
                 asso_item = database_to_dict(item,mission_asso_web,mission_asso_database)
-                my_db.insert("control_device_algorithm_associate",asso_item)
+                my_db.insert(CONTROL_DEVICE_ALGORITHM_ASSOCIATE,asso_item)
             except Exception as e:
-                print('Insert Error---control_device_algorithm_associate:',e)
+                print('Insert Error---' + CONTROL_DEVICE_ALGORITHM_ASSOCIATE + ':',e)
                 continue
 
     my_db.delete("odin_dynamic_gas",{},is_one=False)

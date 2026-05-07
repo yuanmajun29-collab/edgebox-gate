@@ -1,4 +1,6 @@
 from flask import Blueprint, Flask
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import CONTROL_DEVICE_ALGORITHM_ASSOCIATE, CONTROL_MANAGE_MISSION
 from Utils.db import *
 import cv2
 from threading import Thread
@@ -118,8 +120,8 @@ def pageQueryCameraEdit():
         position_coll = my_db.get_col('odin_device_position')
         # control_associate_coll = my_db.get_col('work_flow_mission_device_associate')
         # control_manage_coll = my_db.get_col('odin_business_control_manage')
-        mission_col = my_db.get_col('control_manage_mission')
-        asso_col = my_db.get_col('control_device_algorithm_associate')
+        mission_col = my_db.get_col(CONTROL_MANAGE_MISSION)
+        asso_col = my_db.get_col(CONTROL_DEVICE_ALGORITHM_ASSOCIATE)
 
         query = {}
         if cameraNum:
@@ -578,7 +580,7 @@ def deleteCameraEdit():
     camera_id = params.get("cameraId")
     my_db = ToMongo("wavedevice")
     generate_log(request, db=my_db)
-    mission_device_col = my_db.get_col("control_device_algorithm_associate")
+    mission_device_col = my_db.get_col(CONTROL_DEVICE_ALGORITHM_ASSOCIATE)
     items = mission_device_col.find({"camera_id": camera_id})
     if items.count() != 0:
         error_response = set_fail_result()

@@ -9,6 +9,8 @@ from .system_misc import *
 from .system_sync import *
 from .sync_model import SyncTimer,init_box_model,init_param,check_service_addr
 from config import SYSTEMLOGO_URL
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import WORK_FLOW_ALGORITHM_CONSTANT
 from Utils.device_misc import make_response_image_jpeg
 import Utils.glv as glv
 from emergency.db_router import transfer_img_url
@@ -302,12 +304,12 @@ def getBaseInfoByUserId():
 
     if page and pageSize:
         num = (page-1) * pageSize
-        model_list = my_db.get_col('work_flow_algorithm_constant').find().sort("serial_number").skip(num).limit(pageSize)
+        model_list = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT).find().sort("serial_number").skip(num).limit(pageSize)
         response_data['page'] = page
         response_data['total'] = model_list.count()
         response_data['pageSize'] = pageSize
     else:
-        model_list = my_db.get_col('work_flow_algorithm_constant').find().sort("serial_number")
+        model_list = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT).find().sort("serial_number")
         response_data['page'] = 0
         response_data['total'] = model_list.count()
         response_data['pageSize'] = 0

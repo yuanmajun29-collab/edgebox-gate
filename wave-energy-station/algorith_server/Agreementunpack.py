@@ -24,6 +24,16 @@ from threading import Thread
 from config import EMERGENCY_IMG_PATH,PLATFORM_MINIO_URL
 import sys
 import Utils.logger as logger
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    CONTROL_DEVICE_ALGORITHM_ASSOCIATE,
+    CONTROL_MANAGE_MISSION,
+    ODIN_BUSINESS_CONTROL_MANAGE,
+    WORK_FLOW_ALGORITHM_CONSTANT,
+    WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,
+    WORK_FLOW_MISSION,
+    WORK_FLOW_MISSION_DEVICE_ASSOCIATE,
+)
 import traceback
 import Utils.glv as glv
 from Utils.voicedevice_utils import *
@@ -177,11 +187,11 @@ def handle_msg(msg_body,mongo:ToMongo,mqtt_client:mqtt.Client,sms:SendSmsResques
         position_associate_col = my_db.get_col("odin_device_device_position_associate")
         position_col =           my_db.get_col("odin_device_position")
         work_model_col =         my_db.get_col('authority_work_model')
-        asso_col =               my_db.get_col('control_device_algorithm_associate')
-        mission_col =            my_db.get_col('control_manage_mission')
+        asso_col =               my_db.get_col(CONTROL_DEVICE_ALGORITHM_ASSOCIATE)
+        mission_col =            my_db.get_col(CONTROL_MANAGE_MISSION)
         emergency_col =          my_db.get_col('odin_business_emergency_record')
         emergency_detail_col =   my_db.get_col('odin_business_emergency_record_detail_info')
-        alg_constant_col =       my_db.get_col('work_flow_algorithm_constant')
+        alg_constant_col =       my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
 
         #查询组织id信息
         organization_id = get_organizationId(work_model_col)
@@ -998,9 +1008,9 @@ def handle_hikhotcam(req,mongo:ToMongo,mqtt_client:mqtt.Client,sms:SendSmsResque
 
         device_id = device_item.get('camera_id')
 
-        mission_associate_col =  my_db.get_col('work_flow_mission_device_associate')
-        alg_col =                my_db.get_col('work_flow_insight_model_algorithm_instance')
-        mission_col =            my_db.get_col('work_flow_mission')
+        mission_associate_col =  my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
+        alg_col =                my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)
+        mission_col =            my_db.get_col(WORK_FLOW_MISSION)
 
         mission_id_list = find_associate_mission3(device_id,'105',alg_col,mission_col,mission_associate_col)
         if not mission_id_list:
@@ -1012,7 +1022,7 @@ def handle_hikhotcam(req,mongo:ToMongo,mqtt_client:mqtt.Client,sms:SendSmsResque
         work_model_col =         my_db.get_col('authority_work_model')
         emergency_col =          my_db.get_col('odin_business_emergency_record')
         emergency_detail_col =   my_db.get_col('odin_business_emergency_record_detail_info')
-        alg_constant_col =       my_db.get_col('work_flow_algorithm_constant')
+        alg_constant_col =       my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
 
         #查询组织id信息
         organization_id = get_organizationId(work_model_col)
@@ -1068,7 +1078,7 @@ def handle_hikhotcam(req,mongo:ToMongo,mqtt_client:mqtt.Client,sms:SendSmsResque
                     #print('不满足%s秒告警间隔:'%str(emergencyIntervalTime))
                     continue
 
-                control_info = my_db.get_col('odin_business_control_manage').find_one({'control_id':mission_id})
+                control_info = my_db.get_col(ODIN_BUSINESS_CONTROL_MANAGE).find_one({'control_id':mission_id})
                 if not control_info:
                     continue
                 

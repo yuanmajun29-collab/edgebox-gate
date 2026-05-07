@@ -1,5 +1,11 @@
 import json
 
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    CONTROL_DEVICE_ALGORITHM_ASSOCIATE,
+    CONTROL_MANAGE_MISSION,
+    WORK_FLOW_ALGORITHM_CONSTANT,
+)
 from .AgreementBuilder import pack_init_agreement,pack_3004_agreement
 from Utils.db import ToMongo
 from .Algorithmutil import constant_to_str
@@ -56,11 +62,11 @@ class ControlSqlHelperv2():
         self.my_db = db_mongo
  
     def build_controls_message(self):
-        mission_col = self.my_db.get_col('control_manage_mission')
-        asso_col = self.my_db.get_col('control_device_algorithm_associate')
+        mission_col = self.my_db.get_col(CONTROL_MANAGE_MISSION)
+        asso_col = self.my_db.get_col(CONTROL_DEVICE_ALGORITHM_ASSOCIATE)
         camera_coll = self.my_db.get_col('odin_device_camera_edit')
         roi_col = self.my_db.get_col('odin_device_roi_area_record')
-        constant_col = self.my_db.get_col('work_flow_algorithm_constant')
+        constant_col = self.my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
         items = []
         device_asso_alg = {}
         controlMissons = mission_col.find({'mission_status':0})

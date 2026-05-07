@@ -1,6 +1,12 @@
 from flask import Blueprint,request, jsonify,current_app,send_file
 
 import io,zipfile,xlwt
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    CONTROL_DEVICE_ALGORITHM_ASSOCIATE,
+    CONTROL_MANAGE_MISSION,
+    WORK_FLOW_ALGORITHM_CONSTANT,
+)
 from Utils.opencv_utils import draw_frame
 
 from Utils.db import *
@@ -33,7 +39,7 @@ def queryControlTaskList():
     my_db = ToMongo("wavedevice")
     generate_log(request, db=my_db)
 
-    asso_col = my_db.get_col('control_device_algorithm_associate')
+    asso_col = my_db.get_col(CONTROL_DEVICE_ALGORITHM_ASSOCIATE)
 
     query = {}
     if missionStatus != None and missionStatus != "":
@@ -48,7 +54,7 @@ def queryControlTaskList():
         groupType = "1" 
     if groupType == "1":
         # 按布控任务分组
-        mission_col = my_db.get_col('control_manage_mission')
+        mission_col = my_db.get_col(CONTROL_MANAGE_MISSION)
         items = mission_col.find(query).skip(num).limit(pageSize)
         for item in items:
             newItem = database_to_dict(item, mission_database, mission_web)
@@ -64,7 +70,7 @@ def queryControlTaskList():
 
     elif groupType == "2":
         # 按算法模型分组
-        constant_col = my_db.get_col('work_flow_algorithm_constant')
+        constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
         constantIdList = asso_col.distinct("algorithm_constant_id")
         items = constant_col.find({"algorithm_constant_id": {"$in": constantIdList}})
         for item in items:
@@ -103,10 +109,10 @@ def queryControlTaskList2():
     my_db = ToMongo('wavedevice')
     generate_log(request,db=my_db)
     query = {"control_id":{"$in":controlIds}} 
-    asso_col = my_db.get_col('control_device_algorithm_associate')
-    mission_col = my_db.get_col('control_manage_mission')
+    asso_col = my_db.get_col(CONTROL_DEVICE_ALGORITHM_ASSOCIATE)
+    mission_col = my_db.get_col(CONTROL_MANAGE_MISSION)
     cam_col = my_db.get_col('odin_device_camera_edit')
-    constant_col = my_db.get_col('work_flow_algorithm_constant')
+    constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
 
     control_items = mission_col.find(query)
     controlInfoVoList = []
@@ -166,10 +172,10 @@ def queryControlTaskInfo():
     controlId = param.get('controlId')
 
     my_db = ToMongo("wavedevice")
-    mission_col = my_db.get_col('control_manage_mission')
-    asso_col = my_db.get_col('control_device_algorithm_associate')
+    mission_col = my_db.get_col(CONTROL_MANAGE_MISSION)
+    asso_col = my_db.get_col(CONTROL_DEVICE_ALGORITHM_ASSOCIATE)
     camera_col = my_db.get_col('odin_device_camera_edit')
-    constant_col = my_db.get_col('work_flow_algorithm_constant')
+    constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
 
     query = {"control_id": controlId}
     mission_item = mission_col.find_one(query)
@@ -221,7 +227,7 @@ def getAlgorithmList():
         query['algorithm_constant_name'] = {"$regex": searchChoose}
 
     my_db = ToMongo("wavedevice")
-    algorithm_coll = my_db.get_col("work_flow_algorithm_constant").find(query)
+    algorithm_coll = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT).find(query)
     items = []
     for algorithm in algorithm_coll:
         items.append(algorithm['algorithm_constant_num'])
@@ -277,7 +283,7 @@ def addControlTask():
         "update_time": now,
         "update_user": user_name
     }
-    my_db.insert("control_manage_mission", item)
+    my_db.insert(CONTROL_MANAGE_MISSION, item)
 
     for algId in algorithmConstantIdList:
         for cameraId in cameraIdList:
@@ -286,7 +292,7 @@ def addControlTask():
                 "algorithm_constant_id": algId,
                 "camera_id": cameraId
             }
-            my_db.insert("control_device_algorithm_associate", newItem)
+            my_db.insert(CONTROL_DEVICE_ALGORITHM_ASSOCIATE, newItem)
 
     #发送算法重启指令
     from algorith_server.AlgorithServer_v2 import SenderThread
@@ -342,9 +348,9 @@ def modifyControlTask():
         "update_user": user_name
     }
     query = {"control_id": controlTaskId}
-    my_db.update("control_manage_mission", query, {"$set": item})
+    my_db.update(CONTROL_MANAGE_MISSION, query, {"$set": item})
 
-    my_db.delete("control_device_algorithm_associate", query, is_one=False)
+    my_db.delete(CONTROL_DEVICE_ALGORITHM_ASSOCIATE, query, is_one=False)
     for algId in algorithmConstantIdList:
         for cameraId in cameraIdList:
             newItem = {
@@ -352,7 +358,7 @@ def modifyControlTask():
                 "algorithm_constant_id": algId,
                 "camera_id": cameraId
             }
-            my_db.insert("control_device_algorithm_associate", newItem)
+            my_db.insert(CONTROL_DEVICE_ALGORITHM_ASSOCIATE, newItem)
 
     #发送算法重启指令
     from algorith_server.AlgorithServer_v2 import SenderThread
@@ -374,8 +380,8 @@ def deleteControlTask():
 
     my_db = ToMongo("wavedevice")
     query = {"control_id": controlID}
-    my_db.delete('control_manage_mission', query)
-    my_db.delete('control_device_algorithm_associate', query, is_one=False)
+    my_db.delete(CONTROL_MANAGE_MISSION, query)
+    my_db.delete(CONTROL_DEVICE_ALGORITHM_ASSOCIATE, query, is_one=False)
 
     #发送算法重启指令
     from algorith_server.AlgorithServer_v2 import SenderThread
@@ -398,10 +404,10 @@ def modifyControlTaskIsActive():
 
     my_db = ToMongo('wavedevice')
     generate_log(request, db=my_db)
-    item = my_db.get_col('control_manage_mission').find_one({"control_id": controlID})
+    item = my_db.get_col(CONTROL_MANAGE_MISSION).find_one({"control_id": controlID})
 
     if item:
-        my_db.update('control_manage_mission', {"control_id": controlID}, {'$set': {'mission_status': switchOperation}})
+        my_db.update(CONTROL_MANAGE_MISSION, {"control_id": controlID}, {'$set': {'mission_status': switchOperation}})
 
     #发送算法重启指令
     from algorith_server.AlgorithServer_v2 import SenderThread
@@ -424,7 +430,7 @@ def queryRelatedCameras():
 
     my_db = ToMongo('wavedevice')
     camera_coll = my_db.get_col('odin_device_camera_edit')
-    camera_alg_coll = my_db.get_col('control_device_algorithm_associate')
+    camera_alg_coll = my_db.get_col(CONTROL_DEVICE_ALGORITHM_ASSOCIATE)
     position_coll = my_db.get_col('odin_device_position')
 
     try:
@@ -451,7 +457,7 @@ def queryRelatedCameras():
 
         elif queryType == "1":
             assoItems = camera_alg_coll.find({"algorithm_constant_id": algorithmConstantId})
-            mission_col = my_db.get_col('control_manage_mission')
+            mission_col = my_db.get_col(CONTROL_MANAGE_MISSION)
             total = assoItems.count()
             size = 10
             pages = total//size +1
@@ -500,8 +506,8 @@ def queryRelateAlg():
     queryType = params.get('type', None)
 
     my_db = ToMongo('wavedevice')
-    camera_alg_coll = my_db.get_col('control_device_algorithm_associate')
-    constant_col = my_db.get_col("work_flow_algorithm_constant")
+    camera_alg_coll = my_db.get_col(CONTROL_DEVICE_ALGORITHM_ASSOCIATE)
+    constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
 
     response = set_success_result()
 
@@ -525,7 +531,7 @@ def queryRelateAlg():
 
     elif queryType == "1":
         assoItems = camera_alg_coll.find({"camera_id": cameraId})
-        mission_col = my_db.get_col('control_manage_mission')
+        mission_col = my_db.get_col(CONTROL_MANAGE_MISSION)
         for item in assoItems:
             controlId = item.get("control_id")
             algorithm_constant_id = item.get("algorithm_constant_id")
@@ -563,8 +569,8 @@ def queryTaskAlg():
     controlId = params.get('controlId', None)
 
     my_db = ToMongo('wavedevice')
-    camera_alg_coll = my_db.get_col('control_device_algorithm_associate')
-    constant_col = my_db.get_col("work_flow_algorithm_constant")
+    camera_alg_coll = my_db.get_col(CONTROL_DEVICE_ALGORITHM_ASSOCIATE)
+    constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
 
     response = set_success_result()
 
@@ -760,7 +766,7 @@ def exportEmergencyItemsByIds():
         if searchChoose and searchChoose != "":
             quary['$or'] = [{'emergency_position':{'$regex':searchChoose}},{'device_name':{'$regex':searchChoose}}]
         if controlName:
-            control_item = my_db.get_col("control_manage_mission").find_one({'control_name':controlName})
+            control_item = my_db.get_col(CONTROL_MANAGE_MISSION).find_one({'control_name':controlName})
             if control_item:
                 quary['mission_id'] = control_item['control_id']
         emergency_items = emergency_record_col.find(quary).sort("emergency_time",-1)
@@ -847,7 +853,7 @@ def selectWorkFlowAlgorithmConstantPaging():
     pageSize = request.json.get("pageSize")
     page = request.json.get("page")
     my_db = ToMongo("wavedevice")
-    algorithm_coll = my_db.get_col("work_flow_algorithm_constant").find()
+    algorithm_coll = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT).find()
     items = []
     for algorithm in algorithm_coll:
         item = {}

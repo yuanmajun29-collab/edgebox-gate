@@ -2,6 +2,8 @@ from datetime import datetime
 from threading import Thread
 
 from flask import Blueprint
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import WORK_FLOW_ALGORITHM_CONSTANT
 from Utils.Utils import *
 from Utils.db import *
 from Utils.jwt_verify import *
@@ -16,7 +18,7 @@ bp = Blueprint("algconstant", __name__, url_prefix='/net-web')
 @login_required
 def queryAlgorithmList():
     my_db = ToMongo("wavedevice")
-    constant_coll = my_db.get_col("work_flow_algorithm_constant")
+    constant_coll = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
     res = {'穿戴(A1)': [], '手持(B1)': [], '危险行为(C1)': [], '越界行为(C2)': [], '违规行为(C3)': [], '消防(D1)': [],
            '设备(E1)': [], '人脸(F1)': [], '摄像机内置算法(G1)': []}
     index_dict = {'穿戴(A1)': 1, '手持(B1)': 2, '危险行为(C1)': 3, '越界行为(C2)': 4, '违规行为(C3)': 5, '消防(D1)': 6,
@@ -60,7 +62,7 @@ def updateAlgorithm():
     query = {'algorithm_constant_id': constantId}
 
     if rate_num:
-        constant_col = my_db.get_col('work_flow_algorithm_constant')
+        constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
         origin_item = constant_col.find_one(query)
         rateNum_ori = origin_item['rate_num']
         constant_num = origin_item['algorithm_constant_num']
@@ -78,7 +80,7 @@ def updateAlgorithm():
             'rate_num': rate_num,
             'algorithm_sound_type': int(audioType),
             'algorithm_sound_file': algorithm_sound_file}
-    my_db.update('work_flow_algorithm_constant', query, {'$set': item})
+    my_db.update(WORK_FLOW_ALGORITHM_CONSTANT, query, {'$set': item})
 
     newItem = database_to_dict3(item,constant_database,constant_web)
     newItem['algorithmServiceNum'] = algorithmServiceNum
