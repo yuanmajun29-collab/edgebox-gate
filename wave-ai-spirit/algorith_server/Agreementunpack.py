@@ -47,6 +47,14 @@ image_dir = EMERGENCY_IMG_PATH
 SYN_EMERGENCY = '/syn/synAddAllEmergency'
 SYN_MINIO_DATA = '/syn/syncEmergencyImage'
 
+
+def _json_loads_message_body(msg_body):
+    """协议帧 body 常为 bytes，Python3 的 json.loads 需要 str。"""
+    if isinstance(msg_body, (bytes, bytearray)):
+        msg_body = msg_body.decode('utf-8')
+    return json.loads(msg_body)
+
+
 def write_image(image_id,emergency_dir,image_byte):
     if not os.path.exists(image_dir):
         os.mkdir(image_dir)
@@ -146,7 +154,7 @@ def judge_cache(msg_cache,mongo,mqtt_client,sms,webhook,re_pool):
 def handle_msg(msg_body,mongo:ToMongo,mqtt_client:mqtt.Client,sms:SendSmsResqueset,webhook:Sendwebrequest,re_pool:redis.Redis):
 
         my_db = mongo
-        msg_body = json.loads(msg_body)
+        msg_body = _json_loads_message_body(msg_body)
 
         emergency_time_stamp = msg_body['algorithm_time']
         emergency_datetime = datetime.fromtimestamp(int(emergency_time_stamp/1000))
@@ -606,7 +614,7 @@ def delete_pic(items,emergency_col):
             mainlogger.info('Delete Error : %s'%e)
 
 def handle_3001_msg(msg_body,mongo:ToMongo):
-    msg = json.loads(msg_body)
+    msg = _json_loads_message_body(msg_body)
     max_camera = msg['max_camera']
     server_version = msg['server_version']
     my_db = mongo

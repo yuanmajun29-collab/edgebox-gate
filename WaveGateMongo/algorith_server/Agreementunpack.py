@@ -38,6 +38,13 @@ SYN_MINIO_DATA = '/business/syn/synFileToMinio'
 SYNC_PERSON_COUNT = '/business/syn/synSmallStallAlarm'
 
 
+def _json_loads_message_body(msg_body):
+    """协议帧 body 常为 bytes，Python3 的 json.loads 需要 str。"""
+    if isinstance(msg_body, (bytes, bytearray)):
+        msg_body = msg_body.decode('utf-8')
+    return json.loads(msg_body)
+
+
 def write_image(image_id, emergency_dir, image_byte):
     if not os.path.exists(image_dir):
         os.mkdir(image_dir)
@@ -108,10 +115,10 @@ def judge_cache(msg_cache, mongo, mqtt_client, sms, webhook, re_pool):
                         elif msg_type == b"04002":
                             result = handle_msg(msg_body, mongo, mqtt_client, sms, webhook, re_pool)
                         elif msg_type == b"04003":
-                            msg = json.loads(msg_body)
+                            msg = _json_loads_message_body(msg_body)
                             mainlogger.debug("--crowdEmergency:%s" % msg)
                         elif msg_type == b"04004":
-                            msg = json.loads(msg_body)
+                            msg = _json_loads_message_body(msg_body)
                             mainlogger.debug("--smallPlaceEmergency:%s" % msg)
                             result = handle_4004_msg(msg, my_db=mongo)
                         msg_cache = msg_cache[length:]
@@ -140,10 +147,10 @@ def judge_cache(msg_cache, mongo, mqtt_client, sms, webhook, re_pool):
                     elif msg_type == b"04002":
                         result = handle_msg(msg_body, mongo, mqtt_client, sms, webhook, re_pool)
                     elif msg_type == b"04003":
-                        msg = json.loads(msg_body)
+                        msg = _json_loads_message_body(msg_body)
                         mainlogger.debug("--crowdEmergency:%s" % msg)
                     elif msg_type == b"04004":
-                        msg = json.loads(msg_body)
+                        msg = _json_loads_message_body(msg_body)
                         mainlogger.debug("--smallPlaceEmergency:%s" % msg)
                         result = handle_4004_msg(msg, my_db=mongo)
                     msg_cache = msg_cache[length:]
@@ -248,6 +255,21 @@ def thread_handle_crossroads_algo_msg(my_db, device_id, identifier, target_list,
     handle_crossroads_thread.start()
 
 
+def _emergency_location_from_device(position_associate_col, position_col, device_id):
+    """由 device_id 解析安装位置、地址描述与经纬度。"""
+    position_item = position_associate_col.find_one({'device_id': device_id})
+    position_id = position_item['position_id'] if position_item else None
+    position_info = position_col.find_one({'position_id': position_id})
+    if position_info:
+        emergency_position = position_info['position_city'] + ',' + position_info['position_area'] + ',' + \
+                             position_info['position_desc']
+        emergency_lon_and_lat = position_info['lon_and_lat']
+    else:
+        emergency_position = ''
+        emergency_lon_and_lat = ''
+    return position_id, emergency_position, emergency_lon_and_lat
+
+
 def _fetch_handle_msg_db_context(my_db: ToMongo, msg_body: dict):
     """加载告警处理所需库表与设备/任务上下文；失败返回 None。"""
     camera_edit_col = my_db.get_col("odin_device_camera_edit")
@@ -265,23 +287,13 @@ def _fetch_handle_msg_db_context(my_db: ToMongo, msg_body: dict):
 
     device_id = msg_body['device_id']
     query_device = {'camera_id': device_id}
-    query_position = {'device_id': device_id}
     device_item = camera_edit_col.find_one(query_device)
     if not device_item:
         mainlogger.debug("--Emergency :未找到关联的摄像机 device_id:%s" % device_id)
         return None
     device_name = device_item['camera_name']
-    position_item = position_associate_col.find_one(query_position)
-    position_id = position_item['position_id'] if position_item else None
-    query_detail = {'position_id': position_id}
-    position_info = position_col.find_one(query_detail)
-    if position_info:
-        emergency_position = position_info['position_city'] + ',' + position_info['position_area'] + ',' + \
-                             position_info['position_desc']
-        emergency_lon_and_lat = position_info['lon_and_lat']
-    else:
-        emergency_position = ''
-        emergency_lon_and_lat = ''
+    position_id, emergency_position, emergency_lon_and_lat = _emergency_location_from_device(
+        position_associate_col, position_col, device_id)
 
     query = {'device_id': device_id}
     mission_items = mission_associate_col.find(query)
@@ -350,22 +362,14 @@ def _build_grouped_algorithm_targets(msg_body: dict, emergency_dir: str):
                 roi_list = item['roi_list']
                 if not roi_list:
                     continue
-                for x in roi_list:
+                for roi_item in roi_list:
                     temp_po = temp.copy()
-                    temp_po['points'] = points_transform(x['points'])
-                    temp_po['left_x'] = x['left_x']
-                    temp_po['top_y'] = x['top_y']
-                    if Identifier in result.keys():
-                        result[Identifier].append(temp_po)
-                    else:
-                        result[Identifier] = []
-                        result[Identifier].append(temp_po)
+                    temp_po['points'] = points_transform(roi_item['points'])
+                    temp_po['left_x'] = roi_item['left_x']
+                    temp_po['top_y'] = roi_item['top_y']
+                    result.setdefault(Identifier, []).append(temp_po)
             else:
-                if Identifier in result.keys():
-                    result[Identifier].append(temp)
-                else:
-                    result[Identifier] = []
-                    result[Identifier].append(temp)
+                result.setdefault(Identifier, []).append(temp)
 
     return result, image_byte, sub_source_id, emergency_image, target_list, image_base64
 
@@ -489,12 +493,152 @@ def _dispatch_emergency_after_db_write(
                                     emergency_record_id)
 
 
+def _iterate_handle_msg_algorithms(
+        my_db, mqtt_client, sms, webhook, re_pool,
+        msg_body, ctx,
+        emergency_time, emergency_dir, emergency_time_stamp,
+        alarm_status, create_time,
+        result, image_byte, sub_source_id, emergency_image, target_list, image_base64,
+):
+    """按算法识别码与布控任务迭代，落库并触发同步、声光、通知。"""
+    organization_id = ctx['organization_id']
+    device_id = ctx['device_id']
+    device_name = ctx['device_name']
+    position_id = ctx['position_id']
+    emergency_position = ctx['emergency_position']
+    emergency_lon_and_lat = ctx['emergency_lon_and_lat']
+    work_model_col = ctx['work_model_col']
+    mission_associate_col = ctx['mission_associate_col']
+    alg_col = ctx['alg_col']
+    mission_col = ctx['mission_col']
+    emergency_col = ctx['emergency_col']
+    emergency_detail_col = ctx['emergency_detail_col']
+    alg_constant_col = ctx['alg_constant_col']
+
+    alarm_algs = []
+    mainlogger.debug("result-----------------{}".format(result))
+    for identifer in result.keys():
+        mainlogger.debug("identifer-----------------{}".format(identifer))
+        algorithm_constant_num = Identifier_to_constant(str(identifer))
+        mainlogger.debug("algorithm_constant_num-----------------{}".format(algorithm_constant_num))
+
+        if CROSSING_CONFIG['use'] == 1:
+            mainlogger.debug("========开始处理消息{}".format(algorithm_constant_num))
+            # 红绿灯项目消息处理
+            send_time_stamp = msg_body['send_time']
+            thread_handle_crossroads_algo_msg(my_db, device_id, identifer, target_list, algorithm_constant_num,
+                                              emergency_time_stamp,
+                                              send_time_stamp)
+
+        mission_id_list = find_associate_mission3(device_id, algorithm_constant_num, alg_col, mission_col,
+                                                  mission_associate_col)
+        if not mission_id_list:
+            continue
+        for mission_id in mission_id_list:
+            missioncol_item = mission_col.find_one({'mission_id': mission_id})
+            # 一个任务绑定多个同种算法
+            instance_items = alg_col.find(
+                {'mission_id': mission_id, 'algorithm_constant_num': algorithm_constant_num})
+            if not instance_items:
+                continue
+            for instance_item in instance_items:
+                alg_service_num = instance_item.get('algorithm_service_num', None)
+                constant_item = alg_constant_col.find_one({'algorithm_service_num': alg_service_num})
+                if not constant_item:
+                    continue
+                alg_name = constant_item['algorithm_constant_name']
+                alarm_algs.append(alg_name)
+
+                if missioncol_item:
+                    emergency_level = constant_item['algorithm_level']
+                    missionWorkTime = missioncol_item['mission_start_time']
+                    emergencyIntervalTime = constant_item['algorithm_interval']
+                else:
+                    emergency_level = 1  # 默认为1
+                    missionWorkTime = '[{"time":"00:00:00-23:59:59"}]'
+                    emergencyIntervalTime = 5
+
+                # 过滤不在感知时段的告警事件
+                flag_in_timeperiod = emergency_timeperiod(missionWorkTime, emergency_time)
+                if not flag_in_timeperiod:
+                    continue
+                res = filter_emergency(device_id, mission_id, alg_service_num, re_pool, emergencyIntervalTime)
+                if res:
+                    continue
+
+                control_info = my_db.get_col('odin_business_control_manage').find_one({'control_id': mission_id})
+                if not control_info:
+                    continue
+
+                model_path = constant_item['algorithm_constant_name']  # 从数据库查model_path
+                if algorithm_constant_num == '165':
+                    model_name = modelPathMap.get(identifer)
+                else:
+                    model_name = model_path
+                algorithm_color = constant_item['algorithm_color']
+
+                # 获取工作模式和平台地址
+                work_model, url, minio_url, bind_organizationid = get_sync_url(work_model_col)
+
+                record_flag = control_info.get('is_record')
+                if record_flag == 1:
+                    # 表示不生成告警纪录  只发送声光告警
+                    Alarm_thread = Thread(target=equip_alarm, args=[my_db, mission_id, constant_item])
+                    Alarm_thread.start()
+                    continue
+
+                if work_model == '1' and CURVE_CONFIG['sync'] == 1:
+                    curve_syn_thread = Thread(target=curve_emergency_sync,
+                                              args=[my_db, url, model_path, emergency_time, device_id])
+                    curve_syn_thread.start()
+
+                # 将告警图存入磁盘
+                writepic_thread = Thread(target=write_image, args=[sub_source_id, emergency_dir, image_byte])
+                writepic_thread.start()
+
+                control_name = control_info['control_name']
+                storage_time = control_info['storage_time']
+                storage_num = control_info['storage_num']
+
+                info_list = result[identifer]
+                emergency_record_id, emergency_record_detail_info_id, data1, data2 = _build_emergency_db_payloads(
+                    msg_body,
+                    emergency_level, emergency_time, alarm_status,
+                    emergency_position, emergency_lon_and_lat,
+                    organization_id, create_time,
+                    model_name, model_path, algorithm_color,
+                    position_id, control_name, storage_time, storage_num,
+                    device_id, device_name, mission_id,
+                    sub_source_id, emergency_image, algorithm_constant_num,
+                    info_list,
+                )
+
+                my_db.insert('odin_business_emergency_record_detail_info',
+                             data2
+                             )
+
+                my_db.insert('odin_business_emergency_record',
+                             data1
+                             )
+                _dispatch_emergency_after_db_write(
+                    my_db, mqtt_client, sms, webhook,
+                    work_model, url, minio_url, bind_organizationid,
+                    emergency_col, emergency_detail_col, mission_id, storage_time, storage_num,
+                    emergency_dir, image_byte,
+                    constant_item, info_list, data1, data2, organization_id,
+                    control_name, model_path, device_name, emergency_position, emergency_time,
+                    image_base64, emergency_image, device_id, emergency_record_id, position_id,
+                )
+
+    return alarm_algs
+
+
 def handle_msg(msg_body, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSmsResqueset, webhook: Sendwebrequest,
                re_pool: redis.Redis):
     try:
 
         my_db = mongo
-        msg_body = json.loads(msg_body)
+        msg_body = _json_loads_message_body(msg_body)
         from copy import deepcopy
         msg_body_copy = deepcopy(msg_body)
         del msg_body_copy['img_data_jpeg']
@@ -511,142 +655,18 @@ def handle_msg(msg_body, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSmsR
         ctx = _fetch_handle_msg_db_context(my_db, msg_body)
         if ctx is None:
             return
-        organization_id = ctx['organization_id']
-        device_id = ctx['device_id']
-        device_name = ctx['device_name']
-        position_id = ctx['position_id']
-        emergency_position = ctx['emergency_position']
-        emergency_lon_and_lat = ctx['emergency_lon_and_lat']
-        work_model_col = ctx['work_model_col']
-        mission_associate_col = ctx['mission_associate_col']
-        alg_col = ctx['alg_col']
-        mission_col = ctx['mission_col']
-        emergency_col = ctx['emergency_col']
-        emergency_detail_col = ctx['emergency_detail_col']
-        alg_constant_col = ctx['alg_constant_col']
-
         alarm_status = "1"  # 默认为1
         create_time = datetime.now()
 
         result, image_byte, sub_source_id, emergency_image, target_list, image_base64 = _build_grouped_algorithm_targets(
             msg_body, emergency_dir)
-        # 不同算法分开处理
-        alarm_algs = []
-        mainlogger.debug("result-----------------{}".format(result))
-        for identifer in result.keys():
-            mainlogger.debug("identifer-----------------{}".format(identifer))
-            algorithm_constant_num = Identifier_to_constant(str(identifer))
-            mainlogger.debug("algorithm_constant_num-----------------{}".format(algorithm_constant_num))
-
-            if CROSSING_CONFIG['use'] == 1:
-                mainlogger.debug("========开始处理消息{}".format(algorithm_constant_num))
-                # 红绿灯项目消息处理
-                send_time_stamp = msg_body['send_time']
-                thread_handle_crossroads_algo_msg(my_db, device_id, identifer, target_list, algorithm_constant_num,
-                                                  emergency_time_stamp,
-                                                  send_time_stamp)
-
-            mission_id_list = find_associate_mission3(device_id, algorithm_constant_num, alg_col, mission_col,
-                                                      mission_associate_col)
-            if not mission_id_list:
-                continue
-            for mission_id in mission_id_list:
-                missioncol_item = mission_col.find_one({'mission_id': mission_id})
-                # 一个任务绑定多个同种算法
-                instance_items = alg_col.find(
-                    {'mission_id': mission_id, 'algorithm_constant_num': algorithm_constant_num})
-                if not instance_items:
-                    continue
-                for instance_item in instance_items:
-                    alg_service_num = instance_item.get('algorithm_service_num', None)
-                    constant_item = alg_constant_col.find_one({'algorithm_service_num': alg_service_num})
-
-                    alg_name = constant_item['algorithm_constant_name']
-                    alarm_algs.append(alg_name)
-
-                    if not constant_item:
-                        continue
-                    if missioncol_item:
-                        emergency_level = constant_item['algorithm_level']
-                        missionWorkTime = missioncol_item['mission_start_time']
-                        emergencyIntervalTime = constant_item['algorithm_interval']
-                    else:
-                        emergency_level = 1  # 默认为1
-                        missionWorkTime = '[{"time":"00:00:00-23:59:59"}]'
-                        emergencyIntervalTime = 5
-
-                    # 过滤不在感知时段的告警事件
-                    flag_in_timeperiod = emergency_timeperiod(missionWorkTime, emergency_time)
-                    if not flag_in_timeperiod:
-                        continue
-                    res = filter_emergency(device_id, mission_id, alg_service_num, re_pool, emergencyIntervalTime)
-                    if res:
-                        continue
-
-                    control_info = my_db.get_col('odin_business_control_manage').find_one({'control_id': mission_id})
-                    if not control_info:
-                        continue
-
-                    model_path = constant_item['algorithm_constant_name']  # 从数据库查model_path
-                    if algorithm_constant_num == '165':
-                        model_name = modelPathMap.get(identifer)
-                    else:
-                        model_name = model_path
-                    algorithm_color = constant_item['algorithm_color']
-
-                    # 获取工作模式和平台地址
-                    work_model, url, minio_url, bind_organizationid = get_sync_url(work_model_col)
-
-                    record_flag = control_info.get('is_record')
-                    if record_flag == 1:
-                        # 表示不生成告警纪录  只发送声光告警
-                        Alarm_thread = Thread(target=equip_alarm, args=[my_db, mission_id, constant_item])
-                        Alarm_thread.start()
-                        continue
-
-                    if work_model == '1' and CURVE_CONFIG['sync'] == 1:
-                        curve_syn_thread = Thread(target=curve_emergency_sync,
-                                                  args=[my_db, url, model_path, emergency_time, device_id])
-                        curve_syn_thread.start()
-
-                    # 将告警图存入磁盘
-                    writepic_thread = Thread(target=write_image, args=[sub_source_id, emergency_dir, image_byte])
-                    writepic_thread.start()
-
-                    control_name = control_info['control_name']
-                    storage_time = control_info['storage_time']
-                    storage_num = control_info['storage_num']
-
-                    info_list = result[identifer]
-                    emergency_record_id, emergency_record_detail_info_id, data1, data2 = _build_emergency_db_payloads(
-                        msg_body,
-                        emergency_level, emergency_time, alarm_status,
-                        emergency_position, emergency_lon_and_lat,
-                        organization_id, create_time,
-                        model_name, model_path, algorithm_color,
-                        position_id, control_name, storage_time, storage_num,
-                        device_id, device_name, mission_id,
-                        sub_source_id, emergency_image, algorithm_constant_num,
-                        info_list,
-                    )
-
-                    my_db.insert('odin_business_emergency_record_detail_info',
-                                 data2
-                                 )
-
-                    my_db.insert('odin_business_emergency_record',
-                                 data1
-                                 )
-                    _dispatch_emergency_after_db_write(
-                        my_db, mqtt_client, sms, webhook,
-                        work_model, url, minio_url, bind_organizationid,
-                        emergency_col, emergency_detail_col, mission_id, storage_time, storage_num,
-                        emergency_dir, image_byte,
-                        constant_item, info_list, data1, data2, organization_id,
-                        control_name, model_path, device_name, emergency_position, emergency_time,
-                        image_base64, emergency_image, device_id, emergency_record_id, position_id,
-                    )
-
+        alarm_algs = _iterate_handle_msg_algorithms(
+            my_db, mqtt_client, sms, webhook, re_pool,
+            msg_body, ctx,
+            emergency_time, emergency_dir, emergency_time_stamp,
+            alarm_status, create_time,
+            result, image_byte, sub_source_id, emergency_image, target_list, image_base64,
+        )
         mainlogger.debug('--alarm_type: ' + str(alarm_algs))
         return
     except Exception as e:
@@ -914,7 +934,7 @@ def delete_pic(items, emergency_col):
 
 
 def handle_3001_msg(msg_body, mongo: ToMongo):
-    msg = json.loads(msg_body)
+    msg = _json_loads_message_body(msg_body)
     max_camera = msg['max_camera']
     server_version = msg['server_version']
     my_db = mongo
@@ -1320,19 +1340,8 @@ def handle_hikhotcam(req, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSms
         sub_source_id = uuid.uuid4().hex
         emergency_image = pathhead + sub_source_id + '?' + 'date=%s' % emergency_dir
 
-        # 查询关联的位置信息
-        query_device = {'device_id': device_id}
-        position_item = position_associate_col.find_one(query_device)
-        position_id = position_item['position_id'] if position_item else None
-        query_position = {'position_id': position_id}
-        position_info = position_col.find_one(query_position)
-        if position_info:
-            emergency_position = position_info['position_city'] + ',' + position_info['position_area'] + ',' + \
-                                 position_info['position_desc']
-            emergency_lon_and_lat = position_info['lon_and_lat']
-        else:
-            emergency_position = ''
-            emergency_lon_and_lat = ''
+        position_id, emergency_position, emergency_lon_and_lat = _emergency_location_from_device(
+            position_associate_col, position_col, device_id)
 
         for mission_id in mission_id_list:
             missioncol_item = mission_col.find_one({'mission_id': mission_id})
@@ -1343,11 +1352,10 @@ def handle_hikhotcam(req, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSms
             for instance_item in instance_items:
                 alg_service_num = instance_item.get('algorithm_service_num', None)
                 constant_item = alg_constant_col.find_one({'algorithm_service_num': alg_service_num})
-
-                alg_name = constant_item['algorithm_constant_name']
-
                 if not constant_item:
                     continue
+                alg_name = constant_item['algorithm_constant_name']
+
                 if missioncol_item:
                     emergency_level = constant_item['algorithm_level']
                     missionWorkTime = missioncol_item['mission_start_time']
