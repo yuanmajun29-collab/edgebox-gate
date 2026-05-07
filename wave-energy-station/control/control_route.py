@@ -7,6 +7,7 @@ from edgebox_db.mongo_collections import (
     CONTROL_MANAGE_MISSION,
     WORK_FLOW_ALGORITHM_CONSTANT,
 )
+from edgebox_db.mission_queries import find_control_mission_by_control_id, find_control_mission_by_name
 from Utils.opencv_utils import draw_frame
 
 from Utils.db import *
@@ -404,7 +405,7 @@ def modifyControlTaskIsActive():
 
     my_db = ToMongo('wavedevice')
     generate_log(request, db=my_db)
-    item = my_db.get_col(CONTROL_MANAGE_MISSION).find_one({"control_id": controlID})
+    item = find_control_mission_by_control_id(my_db, controlID)
 
     if item:
         my_db.update(CONTROL_MANAGE_MISSION, {"control_id": controlID}, {'$set': {'mission_status': switchOperation}})
@@ -766,7 +767,7 @@ def exportEmergencyItemsByIds():
         if searchChoose and searchChoose != "":
             quary['$or'] = [{'emergency_position':{'$regex':searchChoose}},{'device_name':{'$regex':searchChoose}}]
         if controlName:
-            control_item = my_db.get_col(CONTROL_MANAGE_MISSION).find_one({'control_name':controlName})
+            control_item = find_control_mission_by_name(my_db, controlName)
             if control_item:
                 quary['mission_id'] = control_item['control_id']
         emergency_items = emergency_record_col.find(quary).sort("emergency_time",-1)

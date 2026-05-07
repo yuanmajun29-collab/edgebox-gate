@@ -30,6 +30,7 @@ from edgebox_db.mongo_collections import (
     CONTROL_MANAGE_MISSION,
     WORK_FLOW_ALGORITHM_CONSTANT,
 )
+from edgebox_db.mission_queries import find_control_mission_by_control_id
 import traceback
 import Utils.glv as glv
 from Utils.voicedevice_utils import *
@@ -296,7 +297,7 @@ def handle_msg(msg_body,mongo:ToMongo,mqtt_client:mqtt.Client,sms:SendSmsResques
             if not mission_id_list :
                 continue
             for mission_id in mission_id_list:
-                missioncol_item = mission_col.find_one({'control_id':mission_id})
+                missioncol_item = find_control_mission_by_control_id(my_db, mission_id)
 
                 model_path = constant_item['algorithm_constant_name']
                 alarm_algs.append(model_path)
@@ -1030,7 +1031,7 @@ def handle_hikhotcam(req,mongo:ToMongo,mqtt_client:mqtt.Client,sms:SendSmsResque
 
 
         for mission_id in mission_id_list:
-            missioncol_item = mission_col.find_one({'control_id': mission_id})
+            missioncol_item = find_control_mission_by_control_id(my_db, mission_id)
             if not missioncol_item:
                 continue
 

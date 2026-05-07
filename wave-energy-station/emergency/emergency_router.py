@@ -1,7 +1,7 @@
 from flask import Blueprint
 from Utils.db import ToMongo
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.mongo_collections import CONTROL_MANAGE_MISSION
+from edgebox_db.mission_queries import find_control_mission_by_control_id, find_control_mission_by_name
 from .db_router import EventImageDBAPI, transfer_img_url
 import uuid
 from Utils.Utils import generate_log
@@ -150,8 +150,8 @@ def getEmergencyDetailInfo():
     detail_info = my_db.get_col("odin_business_emergency_record_detail_info").find_one(
         {"emergency_record_id": emergencyRecordId}, {"_id": 0})
     if emergency_info:
-        control_info = my_db.get_col(CONTROL_MANAGE_MISSION).find_one(
-            {"control_id": emergency_info['mission_id']}, {"_id": 0})
+        control_info = find_control_mission_by_control_id(
+            my_db, emergency_info['mission_id'], {"_id": 0})
     else:
         control_info = None
 
@@ -293,7 +293,7 @@ def delEmergencyItemsByIds():
             quary['$or'] = [{'emergency_position': {'$regex': search_choose}},
                             {'device_name': {'$regex': search_choose}}]
         if controlName:
-            control_item = my_db.get_col(CONTROL_MANAGE_MISSION).find_one({'control_name': controlName})
+            control_item = find_control_mission_by_name(my_db, controlName)
             if control_item:
                 quary['mission_id'] = control_item['control_id']
 
