@@ -78,31 +78,6 @@ def write_hot_image(image_id,emergency_dir,hot_jpg):
     hot_jpg.save(image_path)
     return 
 
-def judge_cache_2(msg_cache,mongo,mqtt_client,sms,webhook,re_pool):
-    if msg_cache:
-        cache_head = msg_cache[0:2]
-        len_body = int(msg_cache[8:18])
-        length = len(msg_cache)
-        if length < len_body:
-            return msg_cache
-        msg_body = msg_cache[55:length]
-        msg_type = msg_cache[18:23]
-        print("[%s]"%datetime.now(),'--msg_type:',msg_type)
-        if msg_type == b"03008":
-            #人脸特征信息存入队列
-            faceidentification_queue.put(msg_body)
-        if msg_type == b"03001":
-            print('----msg_body:',msg_body)
-            result = handle_3001_msg(msg_body,mongo)
-            from alg.AlgorithServer_v2 import SenderThread
-            sender = SenderThread(context=None)
-            sender.start_controls_message()
-        if msg_type == b"04002":
-            result = handle_msg(msg_body,mongo,mqtt_client,sms,webhook,re_pool)
-        len_msg = 55 + len_body
-        msg_cache = msg_cache[len_msg:]
-        return msg_cache
-        
 def judge_cache(msg_cache,mongo,mqtt_client,sms,webhook,re_pool):
         mongo = mongo
         mqtt_client = mqtt_client
