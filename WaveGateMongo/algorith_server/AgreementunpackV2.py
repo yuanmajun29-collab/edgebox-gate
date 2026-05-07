@@ -24,6 +24,15 @@ from system.crossroads_misc import RoadManage
 from msg_queue import vehicle_pedestrian_events_queue
 from config import MESSAGE_CAMERA_VEHICLES, MESSAGE_CAMERA_PEDESTRIAN
 
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    WORK_FLOW_ALGORITHM_CONSTANT,
+    WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,
+    WORK_FLOW_MISSION,
+    WORK_FLOW_MISSION_DEVICE_ASSOCIATE,
+    WORK_FLOW_MISSION_HIDDEN,
+)
+
 mainlogger = logger.getLogger('main')
 
 host_ip = get_ip()
@@ -112,9 +121,9 @@ def handle_alg_send_message(msg_cache, mongo, mqtt_client, sms, webhook, re_pool
 
 def check_crossroads_algo_msg(my_db, device_id, alg_num):
     # 检测算法发来的告警信息是否包含红绿灯所设置的算法模型
-    alg_col = my_db.get_col('work_flow_insight_model_algorithm_instance')
-    mission_col = my_db.get_col('work_flow_mission_hidden')
-    mission_associate_col = my_db.get_col('work_flow_mission_device_associate')
+    alg_col = my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)
+    mission_col = my_db.get_col(WORK_FLOW_MISSION_HIDDEN)
+    mission_associate_col = my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
     mission_items = mission_col.find({'mission_status': 0})
     for mission_item in mission_items:
         mission_id = mission_item['mission_id']
@@ -200,12 +209,12 @@ def _fetch_handle_msg_db_context(my_db: ToMongo, msg_body: dict):
     position_associate_col = my_db.get_col("odin_device_device_position_associate")
     position_col = my_db.get_col("odin_device_position")
     work_model_col = my_db.get_col('authority_work_model')
-    mission_associate_col = my_db.get_col('work_flow_mission_device_associate')
-    alg_col = my_db.get_col('work_flow_insight_model_algorithm_instance')
-    mission_col = my_db.get_col('work_flow_mission')
+    mission_associate_col = my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
+    alg_col = my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)
+    mission_col = my_db.get_col(WORK_FLOW_MISSION)
     emergency_col = my_db.get_col('odin_business_emergency_record')
     emergency_detail_col = my_db.get_col('odin_business_emergency_record_detail_info')
-    alg_constant_col = my_db.get_col('work_flow_algorithm_constant')
+    alg_constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
 
     organization_id = get_organizationId(work_model_col)
 
@@ -1076,8 +1085,8 @@ def handle_4004_msg(msg, my_db):
         result = get_sync_url(model_col)
         if not result or result[0] == 0:
             return
-        col = my_db.get_col('work_flow_mission_device_associate')
-        mission_col = my_db.get_col('work_flow_mission_hidden')
+        col = my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
+        mission_col = my_db.get_col(WORK_FLOW_MISSION_HIDDEN)
         missionIdList = mission_col.distinct('mission_id')
         device_id = msg.get('device_id')
         query = {'device_id': device_id, 'mission_id': {'$in': missionIdList}}
@@ -1241,9 +1250,9 @@ def handle_hikhotcam(req, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSms
 
         device_id = device_item.get('camera_id')
 
-        mission_associate_col = my_db.get_col('work_flow_mission_device_associate')
-        alg_col = my_db.get_col('work_flow_insight_model_algorithm_instance')
-        mission_col = my_db.get_col('work_flow_mission')
+        mission_associate_col = my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
+        alg_col = my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)
+        mission_col = my_db.get_col(WORK_FLOW_MISSION)
 
         mission_id_list = find_associate_mission3(device_id, '105', alg_col, mission_col, mission_associate_col)
         if not mission_id_list:
@@ -1255,7 +1264,7 @@ def handle_hikhotcam(req, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSms
         work_model_col = my_db.get_col('authority_work_model')
         emergency_col = my_db.get_col('odin_business_emergency_record')
         emergency_detail_col = my_db.get_col('odin_business_emergency_record_detail_info')
-        alg_constant_col = my_db.get_col('work_flow_algorithm_constant')
+        alg_constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
 
         # 查询组织id信息
         organization_id = get_organizationId(work_model_col)

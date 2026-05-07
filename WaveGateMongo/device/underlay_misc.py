@@ -5,15 +5,22 @@ from Utils.device_misc import response_no_image
 from config import UNDERLAY_URL
 import  Utils.logger as logger
 
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,
+    WORK_FLOW_MISSION,
+    WORK_FLOW_MISSION_DEVICE_ASSOCIATE,
+)
+
 #mainlogger = logger.getLogger("main")
 
 def isControlRelated(my_db,camera_id,alg_num) -> bool:
     '''
     新增、删除、编辑底图时，查询是否需要下发给算法；
     '''
-    asso_device_col = my_db.get_col("work_flow_mission_device_associate")
-    instance_col = my_db.get_col("work_flow_insight_model_algorithm_instance")
-    mission_col = my_db.get_col("work_flow_mission")
+    asso_device_col = my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
+    instance_col = my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)
+    mission_col = my_db.get_col(WORK_FLOW_MISSION)
 
     missionIDList= asso_device_col.distinct("mission_id",{'device_id':camera_id})
 

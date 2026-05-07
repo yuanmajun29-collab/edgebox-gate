@@ -2,6 +2,13 @@
 from datetime import datetime
 from Utils.db import ToMongo
 from config import PEDESTRIAN_ALG_NUM, VEHICLE_ALG_NUM
+
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,
+    WORK_FLOW_MISSION_DEVICE_ASSOCIATE,
+    WORK_FLOW_MISSION_HIDDEN,
+)
 class RoadMission:
 
     def __init__(self, control_id):
@@ -28,7 +35,7 @@ class RoadMission:
         self.param['mission_end_time'] = '[{\"time\":\"00:00:00-23:59:59\"}]'
     
     def insert_db(self, db: ToMongo):
-        col = db.get_col('work_flow_mission_hidden')
+        col = db.get_col(WORK_FLOW_MISSION_HIDDEN)
         col.insert_one(self.param)
 
 
@@ -75,7 +82,7 @@ class RoadAssoDevice:
                 })
 
     def insert_db(self, db: ToMongo):
-        col = db.get_col('work_flow_mission_device_associate')
+        col = db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
         for item in self.param:
             col.insert_one(item)
 
@@ -119,7 +126,7 @@ class RoadInstance:
         return self.set_param(algorithm_id, instance_path)
 
     def insert_db(self, db: ToMongo):
-        col = db.get_col('work_flow_insight_model_algorithm_instance')
+        col = db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)
         col.insert_one(self.set_param_pedestrian())
         col.insert_one(self.set_param_vehicle())
 

@@ -9,6 +9,11 @@ from Utils.CheckdeviceStatus import CheckInService
 from Utils.utils import *
 from Utils.jwt_verify import *
 
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    WORK_FLOW_MISSION_DEVICE_ASSOCIATE,
+)
+
 bp = Blueprint('device_api',__name__,url_prefix='/net-web')
 
 def position_asso_cam(position_col,position_asso_col,info):
@@ -49,7 +54,7 @@ def pageQueryCameraEdit():
         camera_coll = my_db.get_col('odin_device_camera_edit')
         associate_coll = my_db.get_col('odin_device_device_position_associate')
         position_coll = my_db.get_col('odin_device_position') 
-        control_associate_coll = my_db.get_col('work_flow_mission_device_associate') 
+        control_associate_coll = my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE) 
         control_manage_coll = my_db.get_col('odin_business_control_manage') 
         
         query = {}
@@ -472,7 +477,7 @@ def deleteCameraEdit():
     camera_id = params.get("cameraId")
     my_db = ToMongo("wavedevice")
     generate_log(request,db=my_db)
-    mission_device_col = my_db.get_col("work_flow_mission_device_associate")    
+    mission_device_col = my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)    
     items = mission_device_col.find({"device_id":camera_id})
     if items.count() != 0:
         error_response = set_fail_result()

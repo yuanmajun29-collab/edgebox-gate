@@ -32,6 +32,14 @@ import xmltodict
 import re
 
 import urllib3
+
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    WORK_FLOW_ALGORITHM_CONSTANT,
+    WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,
+    WORK_FLOW_MISSION,
+    WORK_FLOW_MISSION_DEVICE_ASSOCIATE,
+)
 urllib3.disable_warnings()  #禁用 https认证没有证书的 warning
 
 mainlogger = logger.getLogger('main')
@@ -170,12 +178,12 @@ def handle_msg(msg_body,mongo:ToMongo,mqtt_client:mqtt.Client,sms:SendSmsResques
         position_associate_col = my_db.get_col("odin_device_device_position_associate")
         position_col =           my_db.get_col("odin_device_position")
         work_model_col =         my_db.get_col('authority_work_model')
-        mission_associate_col =  my_db.get_col('work_flow_mission_device_associate')
-        alg_col =                my_db.get_col('work_flow_insight_model_algorithm_instance')
-        mission_col =            my_db.get_col('work_flow_mission')
+        mission_associate_col =  my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
+        alg_col =                my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)
+        mission_col =            my_db.get_col(WORK_FLOW_MISSION)
         emergency_col =          my_db.get_col('odin_business_emergency_record')
         emergency_detail_col =   my_db.get_col('odin_business_emergency_record_detail_info')
-        alg_constant_col =       my_db.get_col('work_flow_algorithm_constant')
+        alg_constant_col =       my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
 
         #查询组织id信息
         organization_id = get_organizationId(work_model_col)

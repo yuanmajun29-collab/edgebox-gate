@@ -16,6 +16,11 @@ import traceback
 from device.konad_service import KNDserver
 from device.temp_service import TempServer
 
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    WORK_FLOW_ALGORITHM_CONSTANT,
+)
+
 set_ip_bash = SHELL_DIR + "bm_set_ip"
 
 init_box_info = init_base_info()
@@ -303,12 +308,12 @@ def getBaseInfoByUserId():
 
     if page and pageSize:
         num = (page-1) * pageSize
-        model_list = my_db.get_col('work_flow_algorithm_constant').find().sort("serial_number").skip(num).limit(pageSize)
+        model_list = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT).find().sort("serial_number").skip(num).limit(pageSize)
         response_data['page'] = page
         response_data['total'] = model_list.count()
         response_data['pageSize'] = pageSize
     else:
-        model_list = my_db.get_col('work_flow_algorithm_constant').find().sort("serial_number")
+        model_list = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT).find().sort("serial_number")
         response_data['page'] = 0
         response_data['total'] = model_list.count()
         response_data['pageSize'] = 0

@@ -2,8 +2,13 @@ import sys
 sys.path.append("..")
 from Utils.db import ToMongo
 
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    WORK_FLOW_ALGORITHM_CONSTANT,
+)
+
 my_db = ToMongo('wavedevice')
-constant_col = my_db.get_col('work_flow_algorithm_constant')
+constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
 
 new_item = {
         "algorithm_constant_id" : "001573790963861606944",
@@ -19,4 +24,4 @@ new_item = {
         "rate_num" : None
     }
 
-my_db.insert('work_flow_algorithm_constant',new_item)
+my_db.insert(WORK_FLOW_ALGORITHM_CONSTANT,new_item)

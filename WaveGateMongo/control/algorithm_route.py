@@ -8,6 +8,14 @@ from Utils.jwt_verify import *
 from system.system_misc import database_to_dict
 from system.sys_config import constant_database,constant_web
 
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    WORK_FLOW_ALGORITHM_CONSTANT,
+    WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,
+    WORK_FLOW_MISSION,
+    WORK_FLOW_MISSION_DEVICE_ASSOCIATE,
+)
+
 bp = Blueprint("algconstant",__name__, url_prefix='/net-web')
 
 # 布控任务
@@ -16,7 +24,7 @@ bp = Blueprint("algconstant",__name__, url_prefix='/net-web')
 def queryAlgorithmList():
 
     my_db = ToMongo("wavedevice")
-    constant_coll = my_db.get_col("work_flow_algorithm_constant")
+    constant_coll = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
     res = {'穿戴(A1)':[],'手持(B1)':[],'危险行为(C1)':[],'越界行为(C2)':[],'违规行为(C3)':[],'消防(D1)':[],'设备(E1)':[],'人脸(F1)':[],'摄像机内置算法(G1)':[]}
     index_dict = {'穿戴(A1)':1,'手持(B1)':2,'危险行为(C1)':3,'越界行为(C2)':4,'违规行为(C3)':5,'消防(D1)':6,'设备(E1)':7,'人脸(F1)':8,'摄像机内置算法(G1)':9}
 
@@ -56,8 +64,8 @@ def updateAlgorithm():
     query = {'algorithm_constant_id':constantId}
 
     if rate_num:
-        constant_col = my_db.get_col('work_flow_algorithm_constant')    
-        mission_col = my_db.get_col('work_flow_mission')  
+        constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)    
+        mission_col = my_db.get_col(WORK_FLOW_MISSION)  
         origin_item = constant_col.find_one(query)
         rateNum_ori = origin_item['rate_num']
         constant_num = origin_item['algorithm_constant_num']
@@ -76,7 +84,7 @@ def updateAlgorithm():
             'rate_num':                rate_num,
             'algorithm_sound_type':    int(audioType),
             'algorithm_sound_file':    algorithm_sound_file}
-    my_db.update('work_flow_algorithm_constant',query,{'$set':item})
+    my_db.update(WORK_FLOW_ALGORITHM_CONSTANT,query,{'$set':item})
 
     if rate_num and mission_item and rateNum_ori != rate_num:
         from algorith_server.AlgorithServer_new import SenderThread
@@ -91,11 +99,11 @@ def updateAlgorithm():
 def queryAllCamera():
     params = request.get_json()
     my_db = ToMongo('wavedevice')
-    instance_col = my_db.get_col('work_flow_insight_model_algorithm_instance')
-    cam_asso_col = my_db.get_col('work_flow_mission_device_associate')
+    instance_col = my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)
+    cam_asso_col = my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
     cam_edit_col = my_db.get_col('odin_device_camera_edit')
     position_col = my_db.get_col('odin_device_position')
-    constant_col = my_db.get_col('work_flow_algorithm_constant')
+    constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
 
     page = params.get('page',None)
     pageSize = params.get('pageSize',None)

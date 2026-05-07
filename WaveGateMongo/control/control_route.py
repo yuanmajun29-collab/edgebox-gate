@@ -13,6 +13,21 @@ from Utils.opencv_utils import draw_frame
 from Utils.voicedevice_utils import VoiceBoxUtils,LingsSound
 from algorith_server.Agreementunpack import *
 
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    WORK_FLOW_ALGORITHM_CONSTANT,
+    WORK_FLOW_INSIGHT_MODEL,
+    WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,
+    WORK_FLOW_MISSION,
+    WORK_FLOW_MISSION_DEVICE_ASSOCIATE,
+    WORK_FLOW_MISSION_MODEL_ASSOCIATE,
+    WORK_FLOW_MISSION_PERSONNELGROUP_ASSOCIATE,
+    WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE,
+    WORK_FLOW_PERSONNEL,
+    WORK_FLOW_PERSONNELGROUP,
+    WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,
+)
+
 bp = Blueprint("control",__name__, url_prefix='/net-web')
 
 
@@ -42,10 +57,10 @@ def find_asso_alg(constant_col,instance_col,algNname):
 def getControlItemList():
     responses={}
     my_db = ToMongo("wavedevice")
-    mission_coll = my_db.get_col("work_flow_mission").find()
-    mission_model_associate = my_db.get_col("work_flow_mission_model_associate")
-    algorithm_coll = my_db.get_col("work_flow_algorithm_constant")
-    model_coll = my_db.get_col("work_flow_insight_model")
+    mission_coll = my_db.get_col(WORK_FLOW_MISSION).find()
+    mission_model_associate = my_db.get_col(WORK_FLOW_MISSION_MODEL_ASSOCIATE)
+    algorithm_coll = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
+    model_coll = my_db.get_col(WORK_FLOW_INSIGHT_MODEL)
     control_coll = my_db.get_col("odin_business_control_manage")
     items=[]
     for controlItem in mission_coll:
@@ -97,17 +112,17 @@ def queryControlTaskInfo():
     response={}
     controlId=request.json.get('controlId')
     my_db = ToMongo('wavedevice')
-    device_associate_coll = my_db.get_col("work_flow_mission_device_associate")
+    device_associate_coll = my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
     control_manage_coll = my_db.get_col("odin_business_control_manage")
-    mission_coll = my_db.get_col("work_flow_mission")
-    model_associate_coll = my_db.get_col("work_flow_insight_model_algorithm_instance")
+    mission_coll = my_db.get_col(WORK_FLOW_MISSION)
+    model_associate_coll = my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)
     camera_coll = my_db.get_col("odin_device_camera_edit")
     equipment_col = my_db.get_col('odin_device_equip')
-    personnel_coll = my_db.get_col('work_flow_personnel')
-    personnel_associate_coll = my_db.get_col('work_flow_mission_personnel_associate')
-    personnelgroup_associate_coll = my_db.get_col('work_flow_mission_personnelgroup_associate')
-    group_col =  my_db.get_col('work_flow_personnelgroup')
-    asso_person_col = my_db.get_col('work_flow_personnel_personnelgroup_associate')
+    personnel_coll = my_db.get_col(WORK_FLOW_PERSONNEL)
+    personnel_associate_coll = my_db.get_col(WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE)
+    personnelgroup_associate_coll = my_db.get_col(WORK_FLOW_MISSION_PERSONNELGROUP_ASSOCIATE)
+    group_col =  my_db.get_col(WORK_FLOW_PERSONNELGROUP)
+    asso_person_col = my_db.get_col(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE)
 
     query = {'mission_id':controlId}
 
@@ -207,7 +222,7 @@ def selectWorkFlowAlgorithmConstantPaging():
     pageSize =request.json.get("pageSize")
     page = request.json.get("page")
     my_db = ToMongo("wavedevice")
-    algorithm_coll = my_db.get_col("work_flow_algorithm_constant").find()
+    algorithm_coll = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT).find()
     items=[]
     for algorithm in algorithm_coll:
         item={}
@@ -244,7 +259,7 @@ def getAlgorithmList():
         query['algorithm_constant_name'] = {"$regex":searchChoose}
 
     my_db = ToMongo("wavedevice")
-    algorithm_coll = my_db.get_col("work_flow_algorithm_constant").find(query)
+    algorithm_coll = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT).find(query)
     items=[]
     for algorithm in algorithm_coll:
         items.append(algorithm['algorithm_constant_num'])
@@ -287,7 +302,7 @@ def addControlTask():
     my_db.insert('odin_business_control_manage',item_control)
 
     item_mission = {"mission_start_time":mission_start_time,"mission_end_time":mission_end_time,"mission_id":controlId,"algorithm_id":algorithm_constant_num,'organization_id':'001611544223344645607'}
-    my_db.insert('work_flow_mission',item_mission)
+    my_db.insert(WORK_FLOW_MISSION,item_mission)
 
     success_response['controlId'] = controlId
     return  jsonify(success_response)
@@ -306,13 +321,13 @@ def addControlTaskPersonsGroup():
     personnelGroupIdList = params.get('personnelGroupIdList',None)
     my_db = ToMongo('wavedevice')
     generate_log(request,db=my_db)
-    group_asso_col = my_db.get_col('work_flow_personnel_personnelgroup_associate')
+    group_asso_col = my_db.get_col(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE)
 
     query = {"mission_id":controlID}
-    my_db.delete('work_flow_mission_personnelgroup_associate',query,is_one=False)
+    my_db.delete(WORK_FLOW_MISSION_PERSONNELGROUP_ASSOCIATE,query,is_one=False)
     for groupid in personnelGroupIdList:
         item = {"personnel_group_id":groupid,"mission_id":controlID}
-        my_db.insert("work_flow_mission_personnelgroup_associate",item)
+        my_db.insert(WORK_FLOW_MISSION_PERSONNELGROUP_ASSOCIATE,item)
 
     response = set_success_result()
     return  jsonify( response )
@@ -373,10 +388,10 @@ def addControlTaskPersons():
     controlID = params.get('controlId')
     personnelIdList = params.get('personnelIdList')
     my_db = ToMongo('wavedevice')
-    res = my_db.delete("work_flow_mission_personnel_associate",{"mission_id":controlID},is_one = False)
+    res = my_db.delete(WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE,{"mission_id":controlID},is_one = False)
     for personid in personnelIdList:
         item = {"personnel_id":personid,"mission_id":controlID}
-        my_db.insert("work_flow_mission_personnel_associate",item)
+        my_db.insert(WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE,item)
 
     response = set_success_result()
     return  jsonify( response )
@@ -391,10 +406,10 @@ def addControlTaskCameras():
     deviceList = request.json.get('deviceList')
     my_db = ToMongo('wavedevice')
     generate_log(request,db=my_db)
-    my_db.delete('work_flow_mission_device_associate',{"mission_id":controlID},is_one=False)  #删除旧的关联表
+    my_db.delete(WORK_FLOW_MISSION_DEVICE_ASSOCIATE,{"mission_id":controlID},is_one=False)  #删除旧的关联表
     for device in deviceList:
         item = {'mission_id':controlID,'device_id':device['deviceId'],'product_key':device['productKey']}
-        my_db.insert('work_flow_mission_device_associate',item)
+        my_db.insert(WORK_FLOW_MISSION_DEVICE_ASSOCIATE,item)
 
     response = set_success_result()
     return  jsonify( response )
@@ -414,7 +429,7 @@ def setMissionAssociateEmergency():
             'emergency_audio':emergencyAudio,'emergency_interval_time':emergencyIntervalTime,
             'emergency_level':emergencyLevel,'emergency_music_close_method':emergencyMusicCloseMethod}
     
-    my_db.update('work_flow_mission',{'mission_id':controlID},{'$set':item})
+    my_db.update(WORK_FLOW_MISSION,{'mission_id':controlID},{'$set':item})
     
     response = set_success_result()
     # 往算法客户端socket发布控信息
@@ -434,13 +449,13 @@ def deleteControlTask():
 
     my_db = ToMongo('wavedevice')
     generate_log(request,db=my_db)
-    my_db.delete('work_flow_mission',{'mission_id':controlID})               #删除布控任务
-    my_db.delete('work_flow_mission_device_associate',{'mission_id':controlID},is_one=False)  #删除布控任务设备关联
-    my_db.delete('work_flow_insight_model_algorithm_instance',{'mission_id':controlID},is_one=False)  #删除布控任务模型关联
+    my_db.delete(WORK_FLOW_MISSION,{'mission_id':controlID})               #删除布控任务
+    my_db.delete(WORK_FLOW_MISSION_DEVICE_ASSOCIATE,{'mission_id':controlID},is_one=False)  #删除布控任务设备关联
+    my_db.delete(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,{'mission_id':controlID},is_one=False)  #删除布控任务模型关联
     my_db.delete('odin_business_control_manage',{'control_id':controlID})     #删除布控任务
 
-    my_db.delete('work_flow_mission_personnel_associate',{'mission_id':controlID})   #删除布控任务人员关联
-    my_db.delete('work_flow_mission_personnelgroup_associate',{'mission_id':controlID})   #删除布控任务人员组关联
+    my_db.delete(WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE,{'mission_id':controlID})   #删除布控任务人员关联
+    my_db.delete(WORK_FLOW_MISSION_PERSONNELGROUP_ASSOCIATE,{'mission_id':controlID})   #删除布控任务人员组关联
 
     my_db.delete('odin_device_equip',{'mission_id':controlID})   #删除布控任务人员组关联
 
@@ -471,14 +486,14 @@ def queryControlTaskList():
     my_db = ToMongo('wavedevice')
     generate_log(request,db=my_db)
     
-    algorithm_col = my_db.get_col('work_flow_insight_model_algorithm_instance')
-    device_col = my_db.get_col('work_flow_mission_device_associate')
-    mission_col = my_db.get_col('work_flow_mission')
-    person_col = my_db.get_col('work_flow_mission_personnel_associate')
-    mission_group_col = my_db.get_col('work_flow_mission_personnelgroup_associate')
-    person_group_col = my_db.get_col('work_flow_personnel_personnelgroup_associate')
+    algorithm_col = my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)
+    device_col = my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
+    mission_col = my_db.get_col(WORK_FLOW_MISSION)
+    person_col = my_db.get_col(WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE)
+    mission_group_col = my_db.get_col(WORK_FLOW_MISSION_PERSONNELGROUP_ASSOCIATE)
+    person_group_col = my_db.get_col(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE)
     cam_col = my_db.get_col('odin_device_camera_edit')
-    constant_col = my_db.get_col('work_flow_algorithm_constant')
+    constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
     parm1 = cameraName if cameraName else ''
     parm2 = algorithmConstantName if algorithmConstantName else ''
 
@@ -586,14 +601,14 @@ def modifyControlTask():
     equipEntities = params.get('equipEntities',None)
 
     my_db = ToMongo('wavedevice')
-    mission_col = my_db.get_col('work_flow_mission')
+    mission_col = my_db.get_col(WORK_FLOW_MISSION)
     generate_log(request,db=my_db)
     mission_update = {"emergency_audio":emergencyAudio,"emergency_interval_time":emergencyIntervalTime,"emergency_level":emergencyLevel,"emergency_music_close_method":emergencyMusicCloseMethod,
                     "mission_start_time":missionStartTime,"mission_end_time":missionEndTime,
                     "algorithm_id":algorithmConstantNum
                     }
     control_update = {"storage_time":int(storageTime),"storage_num":int(storageNum),"control_name":controlName}
-    my_db.update('work_flow_mission',
+    my_db.update(WORK_FLOW_MISSION,
                 {'mission_id':controlTaskId},
                 {'$set':mission_update})
     my_db.update('odin_business_control_manage',
@@ -635,8 +650,8 @@ def addControlTaskInsightModelAlgorithm():
 
     my_db = ToMongo('wavedevice')
     generate_log(request,db=my_db)
-    old_items = my_db.get_col('work_flow_insight_model_algorithm_instance').find({'mission_id':controlId})
-    organizationId = my_db.get_col('work_flow_mission').find_one({'mission_id':controlId})['organization_id']
+    old_items = my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE).find({'mission_id':controlId})
+    organizationId = my_db.get_col(WORK_FLOW_MISSION).find_one({'mission_id':controlId})['organization_id']
 
     old_algs = []  
     if old_items.count() != 0:    
@@ -650,7 +665,7 @@ def addControlTaskInsightModelAlgorithm():
 
     for alg in old_algs:
         if alg not in new_algs:
-            my_db.delete('work_flow_insight_model_algorithm_instance',
+            my_db.delete(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,
                         {'mission_id':controlId,'algorithm_service_num':alg})      #如果旧的算法不在了，执行删除
 
 
@@ -678,7 +693,7 @@ def addControlTaskInsightModelAlgorithm():
 
             item['algorithm_service_num'] = ins['algorithmServiceNum']
 
-            my_db.update('work_flow_insight_model_algorithm_instance',{'instance_id':ins['instanceId']},{'$set':item})
+            my_db.update(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,{'instance_id':ins['instanceId']},{'$set':item})
 
         else:                                             #绑定新的算法
             item={}
@@ -702,7 +717,7 @@ def addControlTaskInsightModelAlgorithm():
 
             item['algorithm_service_num'] = ins['algorithmServiceNum']
 
-            my_db.insert('work_flow_insight_model_algorithm_instance',item)
+            my_db.insert(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,item)
 
    
     response = set_success_result()  
@@ -719,11 +734,11 @@ def modifyControlTaskIsActive():
 
     my_db = ToMongo('wavedevice')
     generate_log(request,db=my_db)
-    item = my_db.get_col('work_flow_mission').find_one({'mission_id':controlID})
+    item = my_db.get_col(WORK_FLOW_MISSION).find_one({'mission_id':controlID})
 
     
     if  item:
-        my_db.update('work_flow_mission',{'mission_id':controlID},{'$set':{'mission_status':switchOperation}})    #数据库调整为未下发状态
+        my_db.update(WORK_FLOW_MISSION,{'mission_id':controlID},{'$set':{'mission_status':switchOperation}})    #数据库调整为未下发状态
 
     
     from algorith_server.AlgorithServer_new import SenderThread
@@ -817,12 +832,12 @@ def queryControlTaskList2():
     generate_log(request,db=my_db)
     query = {"control_id":{"$in":controlIds}} 
     control_col = my_db.get_col('odin_business_control_manage').find(query)
-    algorithm_col = my_db.get_col('work_flow_insight_model_algorithm_instance')
-    device_col = my_db.get_col('work_flow_mission_device_associate')
-    mission_col = my_db.get_col('work_flow_mission')
-    person_col = my_db.get_col('work_flow_mission_personnel_associate')
+    algorithm_col = my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)
+    device_col = my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
+    mission_col = my_db.get_col(WORK_FLOW_MISSION)
+    person_col = my_db.get_col(WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE)
     cam_col = my_db.get_col('odin_device_camera_edit')
-    constant_col = my_db.get_col('work_flow_algorithm_constant')
+    constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
 
     controlInfoVoList = []
     for control_item in control_col:

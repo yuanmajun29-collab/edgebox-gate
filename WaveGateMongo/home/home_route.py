@@ -9,6 +9,11 @@ from system.system_misc import database_to_dict
 from system.sys_config import advise_database,advise_web
 from Utils.jwt_verify import *
 
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    WORK_FLOW_MISSION,
+)
+
 bp = Blueprint("home",__name__, url_prefix='/net-web')
 @bp.route('/control/getMisstionCount', methods=['GET','POST'])
 @login_required
@@ -17,7 +22,7 @@ def getMisstionCount():
     接口说明：获取任务统计
     '''
     my_db = ToMongo('wavedevice')
-    mission_coll = my_db.get_col('work_flow_mission')
+    mission_coll = my_db.get_col(WORK_FLOW_MISSION)
     result = mission_coll.aggregate([{'$match':{}},{'$group':{'_id':'$mission_status','count':{'$sum':1}}}
                            ,{'$project':{'status':'$_id',"_id":0,"count": 1}}])
     missionTotal = 0

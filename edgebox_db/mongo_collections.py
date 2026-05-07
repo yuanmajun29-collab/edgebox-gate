@@ -17,5 +17,20 @@ WORK_FLOW_MISSION_DEVICE_ASSOCIATE = "work_flow_mission_device_associate"
 WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE = "work_flow_insight_model_algorithm_instance"
 WORK_FLOW_ALGORITHM_CONSTANT = "work_flow_algorithm_constant"
 
-# --- Mongo 历史布控汇总表（热成像等路径按 mission_id 反查）---
+# --- Mongo / ai-spirit 扩展表名 ---
+WORK_FLOW_MISSION_HIDDEN = "work_flow_mission_hidden"
+WORK_FLOW_MISSION_MODEL_ASSOCIATE = "work_flow_mission_model_associate"
+WORK_FLOW_INSIGHT_MODEL = "work_flow_insight_model"
+WORK_FLOW_PERSONNEL = "work_flow_personnel"
+WORK_FLOW_PERSONNEL_IMAGE = "work_flow_personnel_image"
+WORK_FLOW_PERSONNELGROUP = "work_flow_personnelgroup"
+WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE = (
+    "work_flow_personnel_personnelgroup_associate"
+)
+WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE = "work_flow_mission_personnel_associate"
+WORK_FLOW_MISSION_PERSONNELGROUP_ASSOCIATE = (
+    "work_flow_mission_personnelgroup_associate"
+)
+
+# --- Mongo 历史布控汇总表 ---
 ODIN_BUSINESS_CONTROL_MANAGE = "odin_business_control_manage"

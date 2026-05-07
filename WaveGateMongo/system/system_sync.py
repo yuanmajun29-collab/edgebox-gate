@@ -13,6 +13,20 @@ from Utils.utils import set_fail_result,set_success_result
 from threading import Thread,Timer
 import Utils.logger as logger
 
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    WORK_FLOW_ALGORITHM_CONSTANT,
+    WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,
+    WORK_FLOW_MISSION,
+    WORK_FLOW_MISSION_DEVICE_ASSOCIATE,
+    WORK_FLOW_MISSION_PERSONNELGROUP_ASSOCIATE,
+    WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE,
+    WORK_FLOW_PERSONNEL,
+    WORK_FLOW_PERSONNELGROUP,
+    WORK_FLOW_PERSONNEL_IMAGE,
+    WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,
+)
+
 if NetAgreementType == "https":
     import urllib3
     urllib3.disable_warnings()  #禁用 https认证没有证书的 warning
@@ -136,11 +150,11 @@ def deleteAllData(my_db:ToMongo):
 
     #删除布控任务信息
     my_db.delete("odin_business_control_manage",{},is_one=False)
-    my_db.delete("work_flow_mission",{},is_one=False)
-    my_db.delete("work_flow_mission_device_associate",{},is_one=False)
-    my_db.delete("work_flow_mission_personnel_associate",{},is_one=False)
-    my_db.delete("work_flow_mission_personnelgroup_associate",{},is_one=False)
-    my_db.delete("work_flow_insight_model_algorithm_instance",{},is_one=False)
+    my_db.delete(WORK_FLOW_MISSION,{},is_one=False)
+    my_db.delete(WORK_FLOW_MISSION_DEVICE_ASSOCIATE,{},is_one=False)
+    my_db.delete(WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE,{},is_one=False)
+    my_db.delete(WORK_FLOW_MISSION_PERSONNELGROUP_ASSOCIATE,{},is_one=False)
+    my_db.delete(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,{},is_one=False)
     my_db.delete("odin_device_equip",{},is_one=False)
 
     #删除摄像头信息
@@ -164,10 +178,10 @@ def deleteAllData(my_db:ToMongo):
     my_db.delete("odin_advise_info",{},is_one=False)  
 
     #删除人脸库
-    my_db.delete("work_flow_personnel",{},is_one=False)
-    my_db.delete("work_flow_personnel_image",{},is_one=False)
-    my_db.delete("work_flow_personnel_personnelgroup_associate",{},is_one=False)
-    my_db.delete("work_flow_personnelgroup",{},is_one=False)
+    my_db.delete(WORK_FLOW_PERSONNEL,{},is_one=False)
+    my_db.delete(WORK_FLOW_PERSONNEL_IMAGE,{},is_one=False)
+    my_db.delete(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,{},is_one=False)
+    my_db.delete(WORK_FLOW_PERSONNELGROUP,{},is_one=False)
 
     #删除告警纪录
     my_db.delete("odin_business_emergency_record",{},is_one=False)
@@ -213,7 +227,7 @@ def deleteAllData(my_db:ToMongo):
 
 def get_constant_entity(my_db:ToMongo):
     try:
-        items = my_db.get_col('work_flow_algorithm_constant').find()
+        items = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT).find()
         entities = list()
         for item in items:
             constant_item = dict()
@@ -250,7 +264,7 @@ def query_edge_service(my_db:ToMongo,ststus="0"):
     item['algorithmConstantList'] = constant_entity
     name = host_ip.split('.')[-1]
     item['deviceName'] = item['deviceName'] + '-' + name
-    alg_list = my_db.get_keyvalues("work_flow_algorithm_constant","algorithm_constant_num")
+    alg_list = my_db.get_keyvalues(WORK_FLOW_ALGORITHM_CONSTANT,"algorithm_constant_num")
     item['algorithm'] = ";".join(alg_list)
     content = {"organizationId": item['organizationId'],
                 "cpuSn": item['serialNumber']}

@@ -14,6 +14,11 @@ import Utils.glv as glv
 from emergency.db_router import transfer_img_url
 import traceback
 
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    WORK_FLOW_ALGORITHM_CONSTANT,
+)
+
 set_ip_bash = "/bm_bin/bm_set_ip"
 
 host_ip = get_ip()
@@ -301,12 +306,12 @@ def getBaseInfoByUserId():
 
     if page and pageSize:
         num = (page-1) * pageSize
-        model_list = my_db.get_col('work_flow_algorithm_constant').find().sort("serial_number").skip(num).limit(pageSize)
+        model_list = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT).find().sort("serial_number").skip(num).limit(pageSize)
         response_data['page'] = page
         response_data['total'] = model_list.count()
         response_data['pageSize'] = pageSize
     else:
-        model_list = my_db.get_col('work_flow_algorithm_constant').find().sort("serial_number")
+        model_list = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT).find().sort("serial_number")
         response_data['page'] = 0
         response_data['total'] = model_list.count()
         response_data['pageSize'] = 0

@@ -3,6 +3,11 @@ from Utils.db import ToMongo
 from system.system_misc import database_to_dict
 from system.sys_config import *
 
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    WORK_FLOW_ALGORITHM_CONSTANT,
+)
+
 class ThirdPartyOutputService:
 
     def __init__(self):
@@ -69,7 +74,7 @@ def get_equips_info(my_db:ToMongo):
     return equip_info
 
 def get_constant_info(my_db:ToMongo):
-    constant_col = my_db.get_col("work_flow_algorithm_constant")
+    constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
     res = constant_col.find({},{'_id':0})
     constant_info = []
     for data in res:

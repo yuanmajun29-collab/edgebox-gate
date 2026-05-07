@@ -16,6 +16,15 @@ from msg_queue import faceidentification_queue
 from Utils.facedb import FaceImageDBAPI,FaceFeatureDBAPI,verify_social_num
 import Utils.glv as glv
 
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE,
+    WORK_FLOW_PERSONNEL,
+    WORK_FLOW_PERSONNELGROUP,
+    WORK_FLOW_PERSONNEL_IMAGE,
+    WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,
+)
+
 
 bp = Blueprint("personnel",__name__, url_prefix='/net-web')
 
@@ -24,7 +33,7 @@ bp = Blueprint("personnel",__name__, url_prefix='/net-web')
 def getPersonCount():
 
     my_db = ToMongo('wavedevice')
-    person_col = my_db.get_col('work_flow_personnel')
+    person_col = my_db.get_col(WORK_FLOW_PERSONNEL)
     response = {}
     response['requestId']=uuid.uuid4().hex
     response['requestStatus']="SUCCESS"
@@ -52,15 +61,15 @@ def getPersonList():
     sortType = params.get("sortType",None)
 
     my_db = ToMongo('wavedevice')
-    person_col = my_db.get_col('work_flow_personnel')
-    person_img_col = my_db.get_col('work_flow_personnel_image')
-    group_col = my_db.get_col('work_flow_personnelgroup')
-    asso_group_col = my_db.get_col('work_flow_personnel_personnelgroup_associate')
-    asso_mission_col = my_db.get_col('work_flow_mission_personnel_associate')
+    person_col = my_db.get_col(WORK_FLOW_PERSONNEL)
+    person_img_col = my_db.get_col(WORK_FLOW_PERSONNEL_IMAGE)
+    group_col = my_db.get_col(WORK_FLOW_PERSONNELGROUP)
+    asso_group_col = my_db.get_col(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE)
+    asso_mission_col = my_db.get_col(WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE)
 
     query = {}
     if personnelGroupId:
-        personid_list = my_db.get_keys_in_limitation("work_flow_personnel_personnelgroup_associate",
+        personid_list = my_db.get_keys_in_limitation(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,
                                                     "personnel_id",
                                                     {"personnel_group_id":personnelGroupId})
         query['personnel_id'] = {"$in":personid_list}
@@ -88,11 +97,11 @@ def getPersonList():
         person_id = person_item['personnel_id']
         img_item = person_img_col.find_one({"personnel_id":person_id})
 
-        group_id_list = my_db.get_keys_in_limitation("work_flow_personnel_personnelgroup_associate",
+        group_id_list = my_db.get_keys_in_limitation(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,
                                                     "personnel_group_id",
                                                     {"personnel_id":person_id})
         if group_id_list:
-            group_name_list = my_db.get_keys_in_limitation("work_flow_personnelgroup",
+            group_name_list = my_db.get_keys_in_limitation(WORK_FLOW_PERSONNELGROUP,
                                                     "personnel_group_name",
                                                     {"personnel_group_id":{"$in":group_id_list}})
         else:
@@ -148,10 +157,10 @@ def getPersonDetail():
     personId = params.get("personId",None)
 
     my_db = ToMongo('wavedevice')
-    person_col = my_db.get_col('work_flow_personnel')
-    person_img_col = my_db.get_col('work_flow_personnel_image')
-    group_col = my_db.get_col('work_flow_personnelgroup')
-    asso_group_col = my_db.get_col('work_flow_personnel_personnelgroup_associate')
+    person_col = my_db.get_col(WORK_FLOW_PERSONNEL)
+    person_img_col = my_db.get_col(WORK_FLOW_PERSONNEL_IMAGE)
+    group_col = my_db.get_col(WORK_FLOW_PERSONNELGROUP)
+    asso_group_col = my_db.get_col(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE)
 
     detailEntity = {}
     query = {"personnel_id":personId}
@@ -160,7 +169,7 @@ def getPersonDetail():
     personnelAssocaiteImageList = []
     personnelGroupList = []
     img_items  = person_img_col.find(query)
-    groupid_list = my_db.get_keys_in_limitation("work_flow_personnel_personnelgroup_associate",
+    groupid_list = my_db.get_keys_in_limitation(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,
                                                 "personnel_group_id",
                                                 {"personnel_id":personId})
     for groupid in groupid_list:
@@ -245,9 +254,9 @@ def getPersonnelGroupList():
 
     my_db = ToMongo('wavedevice')
     num = (page-1)*pageSize
-    group_col = my_db.get_col('work_flow_personnelgroup').find(query)
+    group_col = my_db.get_col(WORK_FLOW_PERSONNELGROUP).find(query)
     group_items = group_col.sort(sortBy,sortnum).skip(num).limit(pageSize)
-    asso_group_col = my_db.get_col('work_flow_personnel_personnelgroup_associate')
+    asso_group_col = my_db.get_col(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE)
 
     groupVos =[]
     if group_items.count() != 0:
@@ -320,17 +329,17 @@ def addPerson():
             'wechat_open_id': None, 
             'personnel_phone_number': personnelPhoneNum}
     
-    my_db.insert("work_flow_personnel",item)
+    my_db.insert(WORK_FLOW_PERSONNEL,item)
 
     iter = {"personnel_id":item['personnel_id']}
     for image_item in personnelImages:
         imageid = image_item['imageId']
-        my_db.update("work_flow_personnel_image",{"image_id":imageid},{"$set":iter})
+        my_db.update(WORK_FLOW_PERSONNEL_IMAGE,{"image_id":imageid},{"$set":iter})
 
     if  personnelGroupIds:
         for groupid in personnelGroupIds:
             item_group = {"personnel_id":item['personnel_id'],"personnel_group_id":groupid}
-            my_db.insert("work_flow_personnel_personnelgroup_associate",item_group)
+            my_db.insert(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,item_group)
     
     response = {}
     response['requestId']=uuid.uuid4().hex
@@ -413,7 +422,7 @@ def addPersonBatch():
         item['working_date'] = None
         item['device_sn'] = None
 
-        my_db.insert("work_flow_personnel",item)
+        my_db.insert(WORK_FLOW_PERSONNEL,item)
 
     response = {}
     response['requestId']=uuid.uuid4().hex
@@ -440,8 +449,8 @@ def downloadPersonList():
     sortType = params.get("sortType",None)
 
     my_db = ToMongo('wavedevice')
-    personnel_col = my_db.get_col('work_flow_personnel').find()
-    person_image_col =  my_db.get_col('work_flow_personnel_image')
+    personnel_col = my_db.get_col(WORK_FLOW_PERSONNEL).find()
+    person_image_col =  my_db.get_col(WORK_FLOW_PERSONNEL_IMAGE)
 
 
     personnelList = []
@@ -455,10 +464,10 @@ def downloadPersonList():
         item['personnelSex'] =  personnel_item['personnel_sex']
         item['personnelSocialCard'] =  personnel_item['personnel_social_card']
 
-        group_id_list = my_db.get_keys_in_limitation("work_flow_personnel_personnelgroup_associate",
+        group_id_list = my_db.get_keys_in_limitation(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,
                                                     "personnel_group_id",
                                                     {"personnel_id":item['personnelId']})
-        group_name_list = my_db.get_keys_in_limitation("work_flow_personnelgroup",
+        group_name_list = my_db.get_keys_in_limitation(WORK_FLOW_PERSONNELGROUP,
                                                 "personnel_group_name",
                                                 {"personnel_group_id":{"$in":group_id_list}})
         item['personnelGroupName'] = ",".join(group_name_list)
@@ -491,13 +500,13 @@ def deletePersonnelData():
     
     if personnelIdList:
         for person_id in personnelIdList:
-            my_db.delete("work_flow_personnel",
+            my_db.delete(WORK_FLOW_PERSONNEL,
                         {"personnel_id":person_id})
-            my_db.delete("work_flow_personnel_personnelgroup_associate",
+            my_db.delete(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,
                         {"personnel_id":person_id})
-            my_db.delete("work_flow_personnel_image",
+            my_db.delete(WORK_FLOW_PERSONNEL_IMAGE,
                         {"personnel_id":person_id})
-            my_db.delete("work_flow_mission_personnel_associate",   #删除布控任务与人员的关联
+            my_db.delete(WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE,   #删除布控任务与人员的关联
                         {"personnel_id":person_id})  
 
     response = {}
@@ -549,25 +558,25 @@ def modifyPerson():
     item_personel['personnel_birth'] = personnelBirth
     item_personel['personnel_driving_number'] = personnelDrivingNumber
     item_personel['personnel_driving_type'] = personnelDrivingType
-    my_db.update("work_flow_personnel",query,{"$set":item_personel})     #更新人脸库信息
+    my_db.update(WORK_FLOW_PERSONNEL,query,{"$set":item_personel})     #更新人脸库信息
 
 
     #更新人脸关联persongroup
-    my_db.delete("work_flow_personnel_personnelgroup_associate",query,is_one=False)
+    my_db.delete(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,query,is_one=False)
     for groupid in personnelGroupIds:
         item = {}
         item['personnel_id'] = personnelId
         item['personnel_group_id'] = groupid
-        my_db.insert("work_flow_personnel_personnelgroup_associate",item)
+        my_db.insert(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,item)
 
     #更新人脸关联人脸图片
-    img_id_list = my_db.get_keyvalues("work_flow_personnel_image","image_id")
+    img_id_list = my_db.get_keyvalues(WORK_FLOW_PERSONNEL_IMAGE,"image_id")
     for image_item in personnelImages:
         imageid = image_item['imageId']
         if imageid not in img_id_list:
             continue
         item = {"personnel_id":personnelId}
-        my_db.update("work_flow_personnel_image",{"image_id":imageid},{"$set":item})
+        my_db.update(WORK_FLOW_PERSONNEL_IMAGE,{"image_id":imageid},{"$set":item})
 
     response = {}
     response['requestId']=uuid.uuid4().hex
@@ -586,7 +595,7 @@ def delPersonImages():
 
     my_db = ToMongo('wavedevice')
     query = {"image_id":imageId}
-    my_db.delete("work_flow_personnel_image",query)
+    my_db.delete(WORK_FLOW_PERSONNEL_IMAGE,query)
 
     response = {}
     response['requestId']=uuid.uuid4().hex
@@ -603,7 +612,7 @@ def getPersonListByIds():
     personnelIdList = params.get("personnelIdList",None)
 
     my_db = ToMongo('wavedevice')
-    personnel_col = my_db.get_col('work_flow_personnel')
+    personnel_col = my_db.get_col(WORK_FLOW_PERSONNEL)
     person_items = personnel_col.find({"personnel_id":{"$in":personnelIdList}})
 
     personnelEntityList = []
@@ -712,7 +721,7 @@ def validPersonImage():
             "image_check_url":image_check_url
             }
 
-    my_db.insert("work_flow_personnel_image",item)
+    my_db.insert(WORK_FLOW_PERSONNEL_IMAGE,item)
 
     response = {}
     response['imageId']=imgid
@@ -735,8 +744,8 @@ def getPersonnelByGroupId():
     personnelGroupId = params.get("personnelGroupId",None)
     
     my_db = ToMongo('wavedevice')
-    asso_group_col = my_db.get_col("work_flow_personnel_personnelgroup_associate")
-    personnel_col = my_db.get_col("work_flow_personnel")
+    asso_group_col = my_db.get_col(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE)
+    personnel_col = my_db.get_col(WORK_FLOW_PERSONNEL)
     personnelList =[]
     if personnelGroupId:
         asso_items = asso_group_col.find({"personnel_group_id":personnelGroupId})
@@ -745,10 +754,10 @@ def getPersonnelByGroupId():
             personnel_item = personnel_col.find_one({"personnel_id":personnel_id})
             iter = {}
             iter['personnelGroupId'] = personnelGroupId
-            group_id_list = my_db.get_keys_in_limitation("work_flow_personnel_personnelgroup_associate",
+            group_id_list = my_db.get_keys_in_limitation(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,
                                                     "personnel_group_id",
                                                     {"personnel_id":personnel_id})
-            group_name_list = my_db.get_keys_in_limitation("work_flow_personnelgroup",
+            group_name_list = my_db.get_keys_in_limitation(WORK_FLOW_PERSONNELGROUP,
                                                     "personnel_group_name",
                                                     {"personnel_group_id":{"$in":group_id_list}})
             iter['personnelGroupName'] = ",".join(group_name_list)
@@ -759,7 +768,7 @@ def getPersonnelByGroupId():
             iter['personnelSocialCard'] = personnel_item['personnel_social_card']
             personnelList.append(iter)
     else:
-        personn_in_group = my_db.get_keyvalues("work_flow_personnel_personnelgroup_associate","personnel_id")
+        personn_in_group = my_db.get_keyvalues(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,"personnel_id")
         query = {"personnel_id":{"$nin":personn_in_group}}
         asso_items = personnel_col.find(query)
         for asso_item in asso_items:
@@ -800,7 +809,7 @@ def addPersonnelGroup():
     item['personnel_group_level'] = 0  #人员组在该分组类型中的等级，普通分组只存在等级0，黑名单分组从0-255
     item['organization_id'] = organization_id
     item['create_time'] = datetime.now()
-    my_db.insert("work_flow_personnelgroup",item)
+    my_db.insert(WORK_FLOW_PERSONNELGROUP,item)
 
     response = {}
     response['requestId']=uuid.uuid4().hex
@@ -828,7 +837,7 @@ def modifyPersonnelGroup():
 
     query= {"personnel_group_id":personnelGroupId}
 
-    my_db.update("work_flow_personnelgroup",query,{"$set":item})
+    my_db.update(WORK_FLOW_PERSONNELGROUP,query,{"$set":item})
 
     response = {}
     response['requestId']=uuid.uuid4().hex
@@ -849,8 +858,8 @@ def deletePersonnelGroup():
     
     my_db = ToMongo('wavedevice')
 
-    my_db.delete("work_flow_personnelgroup",query)
-    my_db.delete("work_flow_personnel_personnelgroup_associate",query,is_one=False)
+    my_db.delete(WORK_FLOW_PERSONNELGROUP,query)
+    my_db.delete(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,query,is_one=False)
 
     response = {}
     response['requestId']=uuid.uuid4().hex
@@ -871,11 +880,11 @@ def modifyPersonGroup():
     personnelIds = params.get("personnelIds",None)
     
     my_db = ToMongo('wavedevice')
-    my_db.delete("work_flow_personnel_personnelgroup_associate",{"personnel_group_id":personnelGroepId},is_one=False)
+    my_db.delete(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,{"personnel_group_id":personnelGroepId},is_one=False)
     
     for personid in personnelIds:
         item = {'personnel_group_id':personnelGroepId,'personnel_id':personid}
-        my_db.insert("work_flow_personnel_personnelgroup_associate",item)
+        my_db.insert(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,item)
 
     response = {}
     response['requestId']=uuid.uuid4().hex

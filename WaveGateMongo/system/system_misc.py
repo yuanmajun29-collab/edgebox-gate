@@ -20,6 +20,21 @@ from system.crossroads_misc import RoadManage
 from system.crossroads_model import *
 from system.crossroads_controller import start_listen_radar_v2
 
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    WORK_FLOW_ALGORITHM_CONSTANT,
+    WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,
+    WORK_FLOW_MISSION,
+    WORK_FLOW_MISSION_DEVICE_ASSOCIATE,
+    WORK_FLOW_MISSION_HIDDEN,
+    WORK_FLOW_MISSION_PERSONNELGROUP_ASSOCIATE,
+    WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE,
+    WORK_FLOW_PERSONNEL,
+    WORK_FLOW_PERSONNELGROUP,
+    WORK_FLOW_PERSONNEL_IMAGE,
+    WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,
+)
+
 def execShell(cmd):
     err,result = subprocess.getstatusoutput(cmd)
     return err,result
@@ -481,12 +496,12 @@ def get_control_info(my_db:ToMongo):
     '''
     导出配置管理中的布控任务信息
     '''
-    instance_col = my_db.get_col("work_flow_insight_model_algorithm_instance")
+    instance_col = my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)
     control_manage_col = my_db.get_col("odin_business_control_manage")
-    device_asso_col = my_db.get_col("work_flow_mission_device_associate")
-    personel_asso_col = my_db.get_col("work_flow_mission_personnel_associate")
-    personel_group_asso_col = my_db.get_col("work_flow_mission_personnelgroup_associate")
-    mission_col = my_db.get_col("work_flow_mission")
+    device_asso_col = my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
+    personel_asso_col = my_db.get_col(WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE)
+    personel_group_asso_col = my_db.get_col(WORK_FLOW_MISSION_PERSONNELGROUP_ASSOCIATE)
+    mission_col = my_db.get_col(WORK_FLOW_MISSION)
 
     controlManageEntity = {}
     controlManageEntity['algorithmInstances'] = []
@@ -543,10 +558,10 @@ def get_person_info(my_db:ToMongo):
     '''
     导出配置管理中的人脸库信息
     '''
-    personnel_col = my_db.get_col("work_flow_personnel")
-    personnel_image_coll = my_db.get_col('work_flow_personnel_image')
-    personnelgroup_asso_coll = my_db.get_col('work_flow_personnel_personnelgroup_associate') 
-    personnelgroup_coll = my_db.get_col('work_flow_personnelgroup') 
+    personnel_col = my_db.get_col(WORK_FLOW_PERSONNEL)
+    personnel_image_coll = my_db.get_col(WORK_FLOW_PERSONNEL_IMAGE)
+    personnelgroup_asso_coll = my_db.get_col(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE) 
+    personnelgroup_coll = my_db.get_col(WORK_FLOW_PERSONNELGROUP) 
 
     personEntity = {}
     personEntity['groupAssociateList'] = []
@@ -666,7 +681,7 @@ def delete_person_info(my_db,imageList):
         for image in imageList:
             imageid_list.append(image['imageId'])
     query = {'image_id':{'$nin':imageid_list}}
-    image_coll = my_db.get_col('work_flow_personnel_image')
+    image_coll = my_db.get_col(WORK_FLOW_PERSONNEL_IMAGE)
     items = image_coll.find(query)
     for item in items:
         imageid = item['image_id']
@@ -676,7 +691,7 @@ def delete_person_info(my_db,imageList):
         identpath = FACE_IDENT_URL + imageid
         if os.path.exists(identpath):
             shutil.rmtree(identpath)
-    my_db.delete('work_flow_personnel_image',query,is_one=False)
+    my_db.delete(WORK_FLOW_PERSONNEL_IMAGE,query,is_one=False)
     imgid_list = image_coll.distinct('image_id')
     return imgid_list
 
@@ -714,7 +729,7 @@ def insert_alg_info(my_db:ToMongo,algorithmConstantEntityList):
             # 当红绿灯项目时，对应识别算法识别时间间隔为1
             mainlogger.debug("=======红绿灯项目保持相关识别模型时间间隔为1s======={}".format(item))
             item['algorithm_interval'] = 1
-        my_db.update('work_flow_algorithm_constant',query,{'$set':item})
+        my_db.update(WORK_FLOW_ALGORITHM_CONSTANT,query,{'$set':item})
     return
 
 def insert_person_info(my_db:ToMongo,personEntity):
@@ -730,7 +745,7 @@ def insert_person_info(my_db:ToMongo,personEntity):
     imageFileList = personEntity.get("imageFileList",None)
 
     #不为空才去更新数据库，否则不变   
-    my_db.delete("work_flow_personnel_personnelgroup_associate",{},is_one=False)
+    my_db.delete(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,{},is_one=False)
     if  groupAssociateList:
         for personel_group_asso_item in groupAssociateList:
             #遇到出错的跳过
@@ -738,7 +753,7 @@ def insert_person_info(my_db:ToMongo,personEntity):
                 item= {}
                 item['personnel_group_id'] = personel_group_asso_item['personnelGroupId']
                 item['personnel_id'] = personel_group_asso_item['personnelId']
-                my_db.insert("work_flow_personnel_personnelgroup_associate",item)
+                my_db.insert(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,item)
             except Exception as e:
                 print('Insert Error---groupAssociateList:',e)
                 continue
@@ -755,34 +770,34 @@ def insert_person_info(my_db:ToMongo,personEntity):
                     del personnel_image_item['image_check_url']
                     del personnel_image_item['image_url']
                     query = {'image_id':imgid}
-                    my_db.update("work_flow_personnel_image",query,{'$set':personnel_image_item})
+                    my_db.update(WORK_FLOW_PERSONNEL_IMAGE,query,{'$set':personnel_image_item})
                 else:
-                    my_db.insert("work_flow_personnel_image",personnel_image_item)
+                    my_db.insert(WORK_FLOW_PERSONNEL_IMAGE,personnel_image_item)
                 
             except Exception as e:
                 print('Insert Error---imageList:',e)
                 continue
 
     
-    my_db.delete("work_flow_personnelgroup",{},is_one=False)
+    my_db.delete(WORK_FLOW_PERSONNELGROUP,{},is_one=False)
     if  workFlowPersonnelGroupVoList:
         for item in workFlowPersonnelGroupVoList:
             try:
                 personnelgroup_item = database_to_dict(item,personnel_group_web,personnel_group_database)
                 personnelgroup_item['create_time'] = trans2date(personnelgroup_item['create_time'])
-                my_db.insert("work_flow_personnelgroup",personnelgroup_item)
+                my_db.insert(WORK_FLOW_PERSONNELGROUP,personnelgroup_item)
             except Exception as e:
                 print('Insert Error---workFlowPersonnelGroupVoList:',e)
                 continue
 
     
-    my_db.delete("work_flow_personnel",{},is_one=False)
+    my_db.delete(WORK_FLOW_PERSONNEL,{},is_one=False)
     if  workFlowPersonnelVoList:
         for item in workFlowPersonnelVoList:
             try:
                 personnel_item = database_to_dict(item,personnel_web,personnel_database)
                 personnel_item['create_time'] = trans2date(personnel_item['create_time'])
-                my_db.insert("work_flow_personnel",personnel_item)
+                my_db.insert(WORK_FLOW_PERSONNEL,personnel_item)
             except Exception as e:
                 print('Insert Error---workFlowPersonnelVoList:',e)
                 continue
@@ -862,7 +877,7 @@ def insert_person_info(my_db:ToMongo,personEntity):
                 image_item = {  'image_operation_statue':image_operation_statue,
                                 'image_url':face_url,
                                 'image_check_url':image_check_url}
-                my_db.update("work_flow_personnel_image",{"image_id":imgid},{"$set":image_item})
+                my_db.update(WORK_FLOW_PERSONNEL_IMAGE,{"image_id":imgid},{"$set":image_item})
 
             except Exception as e:
                 mainlogger.debug("--同步人脸error:%s"%e)       
@@ -1072,7 +1087,7 @@ def insert_constant_info(my_db:ToMongo,algorithmConstantEntityList):
             rateNum = item.get('rateNum')
             item['rateNum'] = float(rateNum) if rateNum else None
             query = {'algorithm_service_num':item.get('algorithm_service_num')}
-            my_db.update('work_flow_algorithm_constant',query,{'$set':item})
+            my_db.update(WORK_FLOW_ALGORITHM_CONSTANT,query,{'$set':item})
     except Exception as e:
         mainlogger.debug("同步algorithmConstantEntityList error:%s"%e)
     return
@@ -1107,13 +1122,13 @@ def insert_control_info(my_db:ToMongo,controlManageEntity):
     trafficLightConfigList = controlManageEntity.get("trafficLightConfigList",None)
     trafficLightRuler = controlManageEntity.get("trafficLightRuler",None)
     
-    my_db.delete("work_flow_insight_model_algorithm_instance",{},is_one=False)
+    my_db.delete(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,{},is_one=False)
     if  algorithmInstances:
         for item in algorithmInstances:
             try:
                 instance_item = database_to_dict(item,instance_web,instance_database)     
                 instance_item['create_time'] = trans2date(instance_item['create_time'])
-                my_db.insert("work_flow_insight_model_algorithm_instance",instance_item)
+                my_db.insert(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,instance_item)
             except Exception as e:
                 print('Insert Error--algorithmInstances:',e)
                 continue
@@ -1133,7 +1148,7 @@ def insert_control_info(my_db:ToMongo,controlManageEntity):
                 continue
 
     
-    my_db.delete("work_flow_mission_device_associate",{},is_one=False)
+    my_db.delete(WORK_FLOW_MISSION_DEVICE_ASSOCIATE,{},is_one=False)
     if  deviceAssociateList:
         for item in deviceAssociateList:
             try:
@@ -1141,14 +1156,14 @@ def insert_control_info(my_db:ToMongo,controlManageEntity):
                 device_asso_item['device_id'] = item['deviceId']
                 device_asso_item['mission_id'] = item['missionId']
                 device_asso_item['product_key']  = item['productKey']
-                my_db.insert("work_flow_mission_device_associate",device_asso_item)
+                my_db.insert(WORK_FLOW_MISSION_DEVICE_ASSOCIATE,device_asso_item)
             except Exception as e:
                 print('Insert Error---deviceAssociateList:',e)
                 continue
 
         
     
-    my_db.delete("work_flow_mission_personnel_associate",{},is_one=False)
+    my_db.delete(WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE,{},is_one=False)
     if  personnelAssociateList:
         for item in personnelAssociateList:
             try:
@@ -1156,27 +1171,27 @@ def insert_control_info(my_db:ToMongo,controlManageEntity):
                 personel_asso_item['personnel_id'] = item['personnelId']
                 personel_asso_item['mission_id'] = item['missionId']
               #  personel_asso_item['model_id']  = item['modelId']
-                my_db.insert("work_flow_mission_personnel_associate",personel_asso_item)
+                my_db.insert(WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE,personel_asso_item)
             except Exception as e:
                 print('Insert Error-----personnelAssociateList:',e)
                 continue
 
     
-    my_db.delete("work_flow_mission_personnelgroup_associate",{},is_one=False)
+    my_db.delete(WORK_FLOW_MISSION_PERSONNELGROUP_ASSOCIATE,{},is_one=False)
     if  personnelGroupAssociateList:
         for item in personnelGroupAssociateList:
             try:
                 personel_group_asso_item = {}
                 personel_group_asso_item['mission_id'] = item['missionId']
                 personel_group_asso_item['personnel_group_id']  = item['personnelGroupId']
-                my_db.insert("work_flow_mission_personnelgroup_associate",personel_group_asso_item)
+                my_db.insert(WORK_FLOW_MISSION_PERSONNELGROUP_ASSOCIATE,personel_group_asso_item)
             except Exception as e:
                 print('Insert Error------personnelGroupAssociateList:',e)
                 continue
 
     
-    my_db.delete("work_flow_mission",{},is_one=False)
-    my_db.delete("work_flow_mission_hidden",{},is_one=False)
+    my_db.delete(WORK_FLOW_MISSION,{},is_one=False)
+    my_db.delete(WORK_FLOW_MISSION_HIDDEN,{},is_one=False)
     if  workFlowMissionVos:
         for item in workFlowMissionVos:
             try:
@@ -1184,9 +1199,9 @@ def insert_control_info(my_db:ToMongo,controlManageEntity):
                 missions_item['create_time'] = trans2date(missions_item['create_time'])
                 if missions_item.get('algorithm_id') == '173':
                     #三小场所的任务
-                    my_db.insert("work_flow_mission_hidden",missions_item)
+                    my_db.insert(WORK_FLOW_MISSION_HIDDEN,missions_item)
                 else:
-                    my_db.insert("work_flow_mission",missions_item)
+                    my_db.insert(WORK_FLOW_MISSION,missions_item)
             except Exception as e:
                 print('Insert Error-------workFlowMissionVos:',e)
                 continue

@@ -6,6 +6,19 @@ from algorith_server.Algorithmutil import constant_to_str
 from Utils.facedb import FaceFeatureDBAPI
 import Utils.logger as logger
 
+import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.mongo_collections import (
+    WORK_FLOW_ALGORITHM_CONSTANT,
+    WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,
+    WORK_FLOW_MISSION,
+    WORK_FLOW_MISSION_DEVICE_ASSOCIATE,
+    WORK_FLOW_MISSION_HIDDEN,
+    WORK_FLOW_MISSION_PERSONNELGROUP_ASSOCIATE,
+    WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE,
+    WORK_FLOW_PERSONNEL_IMAGE,
+    WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE,
+)
+
 mainlogger = logger.getLogger('main')
 
 
@@ -63,17 +76,17 @@ class ControlSqlHelperv2():
  
     def build_controls_message(self):
         Facefature = FaceFeatureDBAPI()
-        Missons  = self.my_db.get_col('work_flow_mission').find({'mission_status':0})
-        smallStallMission = self.my_db.get_col('work_flow_mission_hidden').find({'mission_status':0})
-        DeviceAssociate = self.my_db.get_col('work_flow_mission_device_associate')
+        Missons  = self.my_db.get_col(WORK_FLOW_MISSION).find({'mission_status':0})
+        smallStallMission = self.my_db.get_col(WORK_FLOW_MISSION_HIDDEN).find({'mission_status':0})
+        DeviceAssociate = self.my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
         camera_coll = self.my_db.get_col('odin_device_camera_edit')
-        algorithm_coll = self.my_db.get_col('work_flow_insight_model_algorithm_instance')
+        algorithm_coll = self.my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)
         roi_col = self.my_db.get_col('odin_device_roi_area_record')
-        asso_person_col = self.my_db.get_col('work_flow_mission_personnel_associate')
-        asso_persongroup_col = self.my_db.get_col('work_flow_mission_personnelgroup_associate')
-        group_col = self.my_db.get_col('work_flow_personnel_personnelgroup_associate')
-        asso_img_col = self.my_db.get_col('work_flow_personnel_image')
-        constant_col = self.my_db.get_col('work_flow_algorithm_constant')
+        asso_person_col = self.my_db.get_col(WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE)
+        asso_persongroup_col = self.my_db.get_col(WORK_FLOW_MISSION_PERSONNELGROUP_ASSOCIATE)
+        group_col = self.my_db.get_col(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE)
+        asso_img_col = self.my_db.get_col(WORK_FLOW_PERSONNEL_IMAGE)
+        constant_col = self.my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
         items = []
         device_asso_alg = {}
         controlMissons = list(Missons) + list(smallStallMission)
