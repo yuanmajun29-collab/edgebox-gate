@@ -215,7 +215,6 @@ def handle_msg(msg_body, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSmsR
         # 防止告警产生堆积，直接删除相差时间超过3分钟的告警
         if accumulated_flag:
             mainlogger.debug("--Emergency :告警时间与当前时间相差3分钟以上,emergencyTime :%s" % emergency_datetime)
-        #    return
         emergency_time = emergency_datetime.strftime("%Y-%m-%d %H:%M:%S")
         emergency_dir = emergency_datetime.strftime("%Y%m%d")
 
@@ -230,8 +229,6 @@ def handle_msg(msg_body, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSmsR
         emergency_col = my_db.get_col('odin_business_emergency_record')
         emergency_detail_col = my_db.get_col('odin_business_emergency_record_detail_info')
         alg_constant_col = my_db.get_col('work_flow_algorithm_constant')
-        # equipment_col =          my_db.get_col('odin_device_equip')
-        # sound_col =              my_db.get_col('odin_device_sound')
 
         # 查询组织id信息
         organization_id = get_organizationId(work_model_col)
@@ -382,7 +379,6 @@ def handle_msg(msg_body, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSmsR
                         continue
                     res = filter_emergency(device_id, mission_id, alg_service_num, re_pool, emergencyIntervalTime)
                     if res:
-                        # print('不满足%s秒告警间隔:'%str(emergencyIntervalTime))
                         continue
 
                     control_info = my_db.get_col('odin_business_control_manage').find_one({'control_id': mission_id})
@@ -491,7 +487,6 @@ def handle_msg(msg_body, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSmsR
                     my_db.insert('odin_business_emergency_record',
                                  data1
                                  )
-                    # print('已成功告警:',algorithm_constant_num)
                     # 判断工作模式，是否需要提交到远程
                     if work_model == '1':
                         submit_thread = Thread(target=emergency_sync,
@@ -539,8 +534,6 @@ def handle_msg(msg_body, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSmsR
                                }
                     params_dict = {'organization_id': organization_id,
                                    'emergency_record_id': emergency_record_id}
-                    params_advise = {'cameraId': device_id,
-                                     'emergency_record_id': emergency_record_id}
                     sms.send_sms_thread(sms_msg, params_dict)
 
                     if webhook_repull():
@@ -548,8 +541,6 @@ def handle_msg(msg_body, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSmsR
                         webhook.get_webhook_delivery()
                     webhook.send_webhook_thread(sms_msg, params_dict)
 
-                    # 告警插入到消息管理表中
-                #    insert_emergency_advise(my_db,sms_msg,params_advise,organization_id)
         mainlogger.debug('--alarm_type: ' + str(alarm_algs))
         return
     except Exception as e:
@@ -1253,7 +1244,6 @@ def handle_hikhotcam(req, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSms
                     continue
                 res = filter_emergency(device_id, mission_id, alg_service_num, re_pool, emergencyIntervalTime)
                 if res:
-                    # print('不满足%s秒告警间隔:'%str(emergencyIntervalTime))
                     continue
 
                 control_info = my_db.get_col('odin_business_control_manage').find_one({'control_id': mission_id})
@@ -1388,8 +1378,6 @@ def handle_hikhotcam(req, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSms
                            }
                 params_dict = {'organization_id': organization_id,
                                'emergency_record_id': emergency_record_id}
-                params_advise = {'cameraId': device_id,
-                                 'emergency_record_id': emergency_record_id}
                 sms.send_sms_thread(sms_msg, params_dict)
 
                 if webhook_repull():
@@ -1397,8 +1385,6 @@ def handle_hikhotcam(req, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSms
                     webhook.get_webhook_delivery()
                 webhook.send_webhook_thread(sms_msg, params_dict)
 
-                # 告警插入到消息管理表中
-            #    insert_emergency_advise(my_db,sms_msg,params_advise,organization_id)
     except Exception as e:
         import traceback
         mainlogger.debug('' + traceback.format_exc())

@@ -8,7 +8,6 @@ import socket
 import time
 from .Algorithmutil import Identifier_to_constant, get_algorithm_num ,modelnamemap
 from Utils.db import ToMongo
-from Utils.advise_func import insert_emergency_advise
 import paho.mqtt.client as mqtt
 import redis
 from system.system_route import emergencyPop_queue
@@ -169,8 +168,6 @@ def handle_msg(msg_body,mongo:ToMongo,mqtt_client:mqtt.Client,sms:SendSmsResques
         emergency_col =          my_db.get_col('odin_business_emergency_record')
         emergency_detail_col =   my_db.get_col('odin_business_emergency_record_detail_info')
         alg_constant_col =       my_db.get_col('work_flow_algorithm_constant')
-        # equipment_col =          my_db.get_col('odin_device_equip')
-        # sound_col =              my_db.get_col('odin_device_sound')
 
         #查询组织id信息
         organization_id = get_organizationId(work_model_col)

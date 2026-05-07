@@ -37,7 +37,6 @@ class VoiceBoxUtils:
         header = {"Content-Type": "application/json"}
         result = requests.get(self.url+"/api/v29+/auth/refresh?",json.dumps(param),headers=header)
         mainlogger.info('refresh:%s'%result)
-        # print(result.json())
         return result
 
     def getterminalinfo(self):
@@ -146,7 +145,6 @@ class VoiceBoxUtils:
         params['result'] = "0"
         params['actioncode'] = "c2ls_mobile_terminal_damand_music"
         params['sign'] = ""
-        # print('params : ',params)
         header = {"Content-Type": "application/json"}
         result = requests.put(self.url + "/api/v29+/ws/forwarder", json.dumps(params),headers=header)
         mainlogger.info('playMusic: %s'%result)
@@ -248,15 +246,3 @@ class CheckSoundStatus:
                 self.my_db.update('odin_device_sound',query={'sound_ip':ip},new={'$set':item})
         return
 
-
-if __name__ == '__main__':
-
-    t = VoiceBoxUtils(url='http://192.168.24.103:81',account='admin',password='123456',volume=10)
-    st = t.login()
-    # print("getTerminalInfo: ",t.getterminalinfo().json())
-   # print("refresh: ",t.refresh())
-    # print("getTTS: ",t.getTTS().json())
-    # print("sendTTS: ",t.playTTS(1,"存在告警信息").json())
-    # print("musicList: ",t.getMusicList().json())
-   # print("playMusic: ",t.playMusic(Arrays.asList("1"),Arrays.asList("31"))))
-   

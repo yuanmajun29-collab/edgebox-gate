@@ -8,7 +8,6 @@ import socket
 import time
 from .Algorithmutil import Identifier_to_constant, get_algorithm_num
 from utils.db import ToMongo
-from utils.advise_func import insert_emergency_advise
 import paho.mqtt.client as mqtt
 import redis
 from system.system_route import emergencyPop_queue
@@ -436,8 +435,6 @@ def handle_msg(msg_body,mongo:ToMongo,mqtt_client:mqtt.Client,sms:SendSmsResques
                             }
                 params_dict = {'organization_id':organization_id,
                             'emergency_record_id':emergency_record_id}
-                params_advise = {'cameraId':device_id,
-                                'emergency_record_id':emergency_record_id}
                 sms.send_sms_thread(sms_msg,params_dict)
                         
                 if webhook_repull():
@@ -445,8 +442,6 @@ def handle_msg(msg_body,mongo:ToMongo,mqtt_client:mqtt.Client,sms:SendSmsResques
                     webhook.get_webhook_delivery()
                 webhook.send_webhook_thread(sms_msg,params_dict)
                 
-                #告警插入到消息管理表中
-            #    insert_emergency_advise(my_db,sms_msg,params_advise,organization_id)
         mainlogger.info('--alarm_type: ' + str(alarm_algs))
         return
 
@@ -1193,8 +1188,6 @@ def handle_hikhotcam(req,mongo:ToMongo,mqtt_client:mqtt.Client,sms:SendSmsResque
                             }
                 params_dict = {'organization_id':organization_id,
                             'emergency_record_id':emergency_record_id}
-                params_advise = {'cameraId':device_id,
-                                'emergency_record_id':emergency_record_id}
                 sms.send_sms_thread(sms_msg,params_dict)
                         
                 if webhook_repull():
@@ -1202,8 +1195,6 @@ def handle_hikhotcam(req,mongo:ToMongo,mqtt_client:mqtt.Client,sms:SendSmsResque
                     webhook.get_webhook_delivery()
                 webhook.send_webhook_thread(sms_msg,params_dict)
                 
-                #告警插入到消息管理表中
-            #    insert_emergency_advise(my_db,sms_msg,params_advise,organization_id)
     except Exception as e:
         import traceback
         mainlogger.info(''+traceback.format_exc())

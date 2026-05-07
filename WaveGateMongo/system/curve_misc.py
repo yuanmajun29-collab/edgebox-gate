@@ -81,57 +81,6 @@ def calculate_crc16(data: bytes) -> str:
     # 返回最终的crc值
     return result
 
-def send485message_old(item):
-    '''
-    发送485声光告警器告警
-    '''
-    try:
-        ip = item.get('equip_ip')
-        port = item.get('equip_port')
-        stop_flag = item.get('stop_flag')
-        addr = (ip,int(port))
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(addr)
-
-        deviceAddr = item.get("device_addr")
-        macAddr = int2hex(deviceAddr)
-        byte_addr = bytes.fromhex(macAddr)
-
-        if stop_flag == 1:
-            # 发送声光告警停止指令
-            bytecode = byte_addr + b'\x06\x00\x16\x00\x01'        
-            crccode = calculate_crc16(bytecode)
-            bytecode = bytecode + bytes.fromhex(crccode)
-            s.send(bytecode)
-            return
-
-        reset_delay_time = item.get("reset_delay_time")
-        # reset_delay_time N秒后关闭声光告警器
-        reset_delay_time = int(reset_delay_time) if reset_delay_time else 10
-
-        soundType = item.get("sound_alarm")
-        # 01 前方来车，请减速慢行   02 注意行人，请减速慢行  03 前方事故，请注意
-        # 04 前方事故，请减速慢行   05 前方落石，请注意   06 摄像头被遮挡，请处理  
-        # 07 雨雾天气，请减速慢行
-
-        byte_sound_type = bytes.fromhex(soundType)
-        bytecode = byte_addr + b'\x06\x40\x08\x00' + byte_sound_type
-        crccode = calculate_crc16(bytecode)
-        bytecode = bytecode + bytes.fromhex(crccode)
-
-        s.send(bytecode)
-
-        task_item = {'equip_ip': ip,
-                     'equip_port': port,
-                     'device_addr': deviceAddr,
-                     'stop_flag': 1}
-        thread_queue = Timer(reset_delay_time, function=send485message, args=[task_item])
-        thread_queue.start()
- 
-    except Exception as e:
-        dynamiclogger.info('Error:485声光告警失败,Reason:%s'%e)
-    return
-
 def send485message(item):
     '''
     发送485声光告警器告警

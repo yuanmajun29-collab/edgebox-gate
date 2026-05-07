@@ -1,5 +1,4 @@
 def init():
-    # print("GLV init")
     global _global_dict
     _global_dict = {}
 
@@ -11,7 +10,6 @@ def set_value(key, value):
     :param value:
     :return:
     '''
-    # print("set value %s %s" %(key,value))
     _global_dict[key] = value
 
 
@@ -22,7 +20,6 @@ def get_value(key, default_value=None):
     :param value:
     :return:
     '''
-    # print("get value %s %s" % (key, default_value))
     try:
         return _global_dict[key]
     except KeyError:

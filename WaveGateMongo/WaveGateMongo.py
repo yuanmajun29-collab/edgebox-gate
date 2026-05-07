@@ -46,7 +46,6 @@ class WaveGateMongoApp():
 
         # 启动算法服务
         self.context = self.app.app_context()
-        # self.algorithServer = AlgorithServer(self.context)
         self.algorithServer = AlgorithServerNew(self.context)
         self.KNDservice = KNDserver(context=None)
         self.Tempservice = TempServer(context=None)
