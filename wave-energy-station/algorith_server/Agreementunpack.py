@@ -27,10 +27,12 @@ import Utils.logger as logger
 import Utils.edgebox_repo  # noqa: F401
 from edgebox_db.mongo_collections import (
     CONTROL_DEVICE_ALGORITHM_ASSOCIATE,
-    CONTROL_MANAGE_MISSION,
     WORK_FLOW_ALGORITHM_CONSTANT,
 )
-from edgebox_db.mission_queries import find_control_mission_by_control_id
+from edgebox_db.mission_queries import (
+    control_mission_collection,
+    find_control_mission_by_control_id,
+)
 import traceback
 import Utils.glv as glv
 from Utils.voicedevice_utils import *
@@ -188,7 +190,7 @@ def handle_msg(msg_body,mongo:ToMongo,mqtt_client:mqtt.Client,sms:SendSmsResques
         position_col =           my_db.get_col("odin_device_position")
         work_model_col =         my_db.get_col('authority_work_model')
         asso_col =               my_db.get_col(CONTROL_DEVICE_ALGORITHM_ASSOCIATE)
-        mission_col =            my_db.get_col(CONTROL_MANAGE_MISSION)
+        mission_col =            control_mission_collection(my_db)
         emergency_col =          my_db.get_col('odin_business_emergency_record')
         emergency_detail_col =   my_db.get_col('odin_business_emergency_record_detail_info')
         alg_constant_col =       my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
@@ -990,7 +992,7 @@ def handle_hikhotcam(req,mongo:ToMongo,mqtt_client:mqtt.Client,sms:SendSmsResque
         device_id = device_item.get('camera_id')
 
         asso_col = my_db.get_col(CONTROL_DEVICE_ALGORITHM_ASSOCIATE)
-        mission_col = my_db.get_col(CONTROL_MANAGE_MISSION)
+        mission_col = control_mission_collection(my_db)
         alg_constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
         constant_item = alg_constant_col.find_one(
             {'algorithm_constant_num': THERMAL_ALGORITHM_CONSTANT_NUM})

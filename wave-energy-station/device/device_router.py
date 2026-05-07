@@ -1,6 +1,7 @@
 from flask import Blueprint, Flask
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.mongo_collections import CONTROL_DEVICE_ALGORITHM_ASSOCIATE, CONTROL_MANAGE_MISSION
+from edgebox_db.mission_queries import control_mission_collection
+from edgebox_db.mongo_collections import CONTROL_DEVICE_ALGORITHM_ASSOCIATE
 from Utils.db import *
 import cv2
 from threading import Thread
@@ -119,7 +120,7 @@ def pageQueryCameraEdit():
         associate_coll = my_db.get_col('odin_device_device_position_associate')
         position_coll = my_db.get_col('odin_device_position')
         # legacy: work_flow_mission_device_associate / odin 汇总表；布控以 control_manage_mission 为准
-        mission_col = my_db.get_col(CONTROL_MANAGE_MISSION)
+        mission_col = control_mission_collection(my_db)
         asso_col = my_db.get_col(CONTROL_DEVICE_ALGORITHM_ASSOCIATE)
 
         query = {}

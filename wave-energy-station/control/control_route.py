@@ -7,7 +7,11 @@ from edgebox_db.mongo_collections import (
     CONTROL_MANAGE_MISSION,
     WORK_FLOW_ALGORITHM_CONSTANT,
 )
-from edgebox_db.mission_queries import find_control_mission_by_control_id, find_control_mission_by_name
+from edgebox_db.mission_queries import (
+    control_mission_collection,
+    find_control_mission_by_control_id,
+    find_control_mission_by_name,
+)
 from Utils.opencv_utils import draw_frame
 
 from Utils.db import *
@@ -55,7 +59,7 @@ def queryControlTaskList():
         groupType = "1" 
     if groupType == "1":
         # 按布控任务分组
-        mission_col = my_db.get_col(CONTROL_MANAGE_MISSION)
+        mission_col = control_mission_collection(my_db)
         items = mission_col.find(query).skip(num).limit(pageSize)
         for item in items:
             newItem = database_to_dict(item, mission_database, mission_web)
@@ -111,7 +115,7 @@ def queryControlTaskList2():
     generate_log(request,db=my_db)
     query = {"control_id":{"$in":controlIds}} 
     asso_col = my_db.get_col(CONTROL_DEVICE_ALGORITHM_ASSOCIATE)
-    mission_col = my_db.get_col(CONTROL_MANAGE_MISSION)
+    mission_col = control_mission_collection(my_db)
     cam_col = my_db.get_col('odin_device_camera_edit')
     constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
 
@@ -173,7 +177,7 @@ def queryControlTaskInfo():
     controlId = param.get('controlId')
 
     my_db = ToMongo("wavedevice")
-    mission_col = my_db.get_col(CONTROL_MANAGE_MISSION)
+    mission_col = control_mission_collection(my_db)
     asso_col = my_db.get_col(CONTROL_DEVICE_ALGORITHM_ASSOCIATE)
     camera_col = my_db.get_col('odin_device_camera_edit')
     constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
@@ -458,7 +462,7 @@ def queryRelatedCameras():
 
         elif queryType == "1":
             assoItems = camera_alg_coll.find({"algorithm_constant_id": algorithmConstantId})
-            mission_col = my_db.get_col(CONTROL_MANAGE_MISSION)
+            mission_col = control_mission_collection(my_db)
             total = assoItems.count()
             size = 10
             pages = total//size +1
@@ -532,7 +536,7 @@ def queryRelateAlg():
 
     elif queryType == "1":
         assoItems = camera_alg_coll.find({"camera_id": cameraId})
-        mission_col = my_db.get_col(CONTROL_MANAGE_MISSION)
+        mission_col = control_mission_collection(my_db)
         for item in assoItems:
             controlId = item.get("control_id")
             algorithm_constant_id = item.get("algorithm_constant_id")

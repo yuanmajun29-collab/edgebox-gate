@@ -16,6 +16,7 @@ from edgebox_db.mongo_collections import (
     CONTROL_MANAGE_MISSION,
     WORK_FLOW_ALGORITHM_CONSTANT,
 )
+from edgebox_db.mission_queries import control_mission_collection
 from algorith_server.Alibabasms import SendSmsResqueset
 
 mainlogger = logger.getLogger("main")
@@ -493,7 +494,7 @@ def get_control_info(my_db:ToMongo):
     """
     导出配置管理中的布控信息
     """
-    mission_col = my_db.get_col(CONTROL_MANAGE_MISSION)
+    mission_col = control_mission_collection(my_db)
     device_asso_col = my_db.get_col(CONTROL_DEVICE_ALGORITHM_ASSOCIATE)
 
     controlManageEntity = {}

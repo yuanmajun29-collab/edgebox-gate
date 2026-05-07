@@ -1,6 +1,6 @@
 from flask import Blueprint
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.mongo_collections import CONTROL_MANAGE_MISSION
+from edgebox_db.mission_queries import control_mission_collection
 from Utils.db import ToMongo
 import uuid
 import calendar
@@ -18,7 +18,7 @@ def getMisstionCount():
     接口说明：获取任务统计
     '''
     my_db = ToMongo('wavedevice')
-    mission_coll = my_db.get_col(CONTROL_MANAGE_MISSION)
+    mission_coll = control_mission_collection(my_db)
     missionTotal = mission_coll.find().count()
     missonActiveSize = mission_coll.find({'mission_status': 0}).count()
 
