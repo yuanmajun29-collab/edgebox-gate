@@ -1,5 +1,6 @@
 from flask import Flask
 
+import Utils.edgebox_repo  # noqa: F401 — monorepo 根路径，供 edgebox_db / edgebox_config
 from algorith_server.mongo_service import check_mongo
 import config
 from algorith_server.AlgorithServer_v2 import AlgorithServer

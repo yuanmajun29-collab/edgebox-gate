@@ -1,5 +1,6 @@
 from flask import Flask
 
+import Utils.edgebox_repo  # noqa: F401 — monorepo 根路径，供 edgebox_db / edgebox_config
 import config
 from home import home_bp
 from device import device_bp, device_roibp, dynamic_bp
