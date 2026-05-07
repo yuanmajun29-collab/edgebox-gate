@@ -250,6 +250,128 @@ def thread_handle_crossroads_algo_msg(my_db, device_id, identifier, target_list,
     handle_crossroads_thread.start()
 
 
+def _fetch_handle_msg_db_context(my_db: ToMongo, msg_body: dict):
+    """加载告警处理所需库表与设备/任务上下文；失败返回 None。"""
+    camera_edit_col = my_db.get_col("odin_device_camera_edit")
+    position_associate_col = my_db.get_col("odin_device_device_position_associate")
+    position_col = my_db.get_col("odin_device_position")
+    work_model_col = my_db.get_col('authority_work_model')
+    mission_associate_col = my_db.get_col('work_flow_mission_device_associate')
+    alg_col = my_db.get_col('work_flow_insight_model_algorithm_instance')
+    mission_col = my_db.get_col('work_flow_mission')
+    emergency_col = my_db.get_col('odin_business_emergency_record')
+    emergency_detail_col = my_db.get_col('odin_business_emergency_record_detail_info')
+    alg_constant_col = my_db.get_col('work_flow_algorithm_constant')
+
+    organization_id = get_organizationId(work_model_col)
+
+    device_id = msg_body['device_id']
+    query_device = {'camera_id': device_id}
+    query_position = {'device_id': device_id}
+    device_item = camera_edit_col.find_one(query_device)
+    if not device_item:
+        mainlogger.debug("--Emergency :未找到关联的摄像机 device_id:%s" % device_id)
+        return None
+    device_name = device_item['camera_name']
+    position_item = position_associate_col.find_one(query_position)
+    position_id = position_item['position_id'] if position_item else None
+    query_detail = {'position_id': position_id}
+    position_info = position_col.find_one(query_detail)
+    if position_info:
+        emergency_position = position_info['position_city'] + ',' + position_info['position_area'] + ',' + \
+                             position_info['position_desc']
+        emergency_lon_and_lat = position_info['lon_and_lat']
+    else:
+        emergency_position = ''
+        emergency_lon_and_lat = ''
+
+    query = {'device_id': device_id}
+    mission_items = mission_associate_col.find(query)
+    if mission_items.count() == 0:
+        mainlogger.debug("--Emergency :未找到关联的布控任务")
+        return None
+
+    return {
+        'organization_id': organization_id,
+        'device_id': device_id,
+        'device_name': device_name,
+        'position_id': position_id,
+        'emergency_position': emergency_position,
+        'emergency_lon_and_lat': emergency_lon_and_lat,
+        'work_model_col': work_model_col,
+        'mission_associate_col': mission_associate_col,
+        'alg_col': alg_col,
+        'mission_col': mission_col,
+        'emergency_col': emergency_col,
+        'emergency_detail_col': emergency_detail_col,
+        'alg_constant_col': alg_constant_col,
+    }
+
+
+def _build_grouped_algorithm_targets(msg_body: dict, emergency_dir: str):
+    """解码告警图、生成访问路径，并按算法识别码分组目标框。"""
+    emergency_image_extra_info = {"imageWidth": 1920,
+                                  "imageHeight": 1080,
+                                  "width": 0, "height": 0, "x": 0, "y": 0, "flag": 2,
+                                  "top_y": None, "left_x": None,
+                                  "points": [],
+                                  "recognitionTime": "2023-01-14 08:33:36 386",
+                                  "processEndTime": "2023-01-14 08:33:36 386",
+                                  "nettyReceiveTime": "2023-01-14 08:33:36 540",
+                                  "faceFeature": None,
+                                  "instanceColor": "#C90740"}
+    emergency_image_extra_info['imageWidth'] = msg_body['img_w']
+    emergency_image_extra_info['imageHeight'] = msg_body['img_h']
+
+    emergency_image_extra_info['recognitionTime'] = msg_body['algorithm_time']
+    emergency_image_extra_info['processEndTime'] = msg_body['algorithm_time']
+    time_d = datetime.fromtimestamp(int(msg_body['send_time']) / 1000)
+    emergency_image_extra_info['nettyReceiveTime'] = time_d.strftime("%Y-%m-%d %H:%M:%S")
+
+    image_base64 = msg_body['img_data_jpeg']
+    image_byte = base64.b64decode(image_base64)
+
+    sub_source_id = uuid.uuid4().hex
+    emergency_image = pathhead + sub_source_id + '?' + 'date=%s' % emergency_dir
+
+    result = {}
+    target_list = msg_body['target_list']
+    for x in target_list:
+        for item in x:
+            Identifier = item['type']
+            algorithm_constant_num = Identifier_to_constant(str(Identifier))
+            if not algorithm_constant_num:
+                continue
+
+            temp = emergency_image_extra_info.copy()
+            temp['x'] = item['x']
+            temp['y'] = item['y']
+            temp['width'] = item['w']
+            temp['height'] = item['h']
+            if algorithm_constant_num in ["5", "114", '128', '15']:  # 尾随、离岗、人流量密度,单人作业
+                roi_list = item['roi_list']
+                if not roi_list:
+                    continue
+                for x in roi_list:
+                    temp_po = temp.copy()
+                    temp_po['points'] = points_transform(x['points'])
+                    temp_po['left_x'] = x['left_x']
+                    temp_po['top_y'] = x['top_y']
+                    if Identifier in result.keys():
+                        result[Identifier].append(temp_po)
+                    else:
+                        result[Identifier] = []
+                        result[Identifier].append(temp_po)
+            else:
+                if Identifier in result.keys():
+                    result[Identifier].append(temp)
+                else:
+                    result[Identifier] = []
+                    result[Identifier].append(temp)
+
+    return result, image_byte, sub_source_id, emergency_image
+
+
 def handle_msg(msg_body, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSmsResqueset, webhook: Sendwebrequest,
                re_pool: redis.Redis):
     try:
@@ -269,115 +391,27 @@ def handle_msg(msg_body, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSmsR
         emergency_time = emergency_datetime.strftime("%Y-%m-%d %H:%M:%S")
         emergency_dir = emergency_datetime.strftime("%Y%m%d")
 
-        # 查数据库的表
-        camera_edit_col = my_db.get_col("odin_device_camera_edit")
-        position_associate_col = my_db.get_col("odin_device_device_position_associate")
-        position_col = my_db.get_col("odin_device_position")
-        work_model_col = my_db.get_col('authority_work_model')
-        mission_associate_col = my_db.get_col('work_flow_mission_device_associate')
-        alg_col = my_db.get_col('work_flow_insight_model_algorithm_instance')
-        mission_col = my_db.get_col('work_flow_mission')
-        emergency_col = my_db.get_col('odin_business_emergency_record')
-        emergency_detail_col = my_db.get_col('odin_business_emergency_record_detail_info')
-        alg_constant_col = my_db.get_col('work_flow_algorithm_constant')
-
-        # 查询组织id信息
-        organization_id = get_organizationId(work_model_col)
-
-        # 查询告警摄像头信息和位置信息
-        device_id = msg_body['device_id']
-        query_device = {'camera_id': device_id}
-        query_position = {'device_id': device_id}
-        device_item = camera_edit_col.find_one(query_device)
-        if not device_item:
-            mainlogger.debug("--Emergency :未找到关联的摄像机 device_id:%s" % device_id)
+        ctx = _fetch_handle_msg_db_context(my_db, msg_body)
+        if ctx is None:
             return
-        device_name = device_item['camera_name']
-        position_item = position_associate_col.find_one(query_position)
-        position_id = position_item['position_id'] if position_item else None
-        query_detail = {'position_id': position_id}
-        position_info = position_col.find_one(query_detail)
-        if position_info:
-            emergency_position = position_info['position_city'] + ',' + position_info['position_area'] + ',' + \
-                                 position_info['position_desc']
-            emergency_lon_and_lat = position_info['lon_and_lat']
-        else:
-            emergency_position = ''
-            emergency_lon_and_lat = ''
-
-        query = {'device_id': device_id}
-        mission_items = mission_associate_col.find(query)
-        if mission_items.count() == 0:
-            mainlogger.debug("--Emergency :未找到关联的布控任务")
-            return
-        mission_list = list(mission_items)
+        organization_id = ctx['organization_id']
+        device_id = ctx['device_id']
+        device_name = ctx['device_name']
+        position_id = ctx['position_id']
+        emergency_position = ctx['emergency_position']
+        emergency_lon_and_lat = ctx['emergency_lon_and_lat']
+        work_model_col = ctx['work_model_col']
+        mission_associate_col = ctx['mission_associate_col']
+        alg_col = ctx['alg_col']
+        mission_col = ctx['mission_col']
+        emergency_col = ctx['emergency_col']
+        emergency_detail_col = ctx['emergency_detail_col']
+        alg_constant_col = ctx['alg_constant_col']
 
         alarm_status = "1"  # 默认为1
         create_time = datetime.now()
 
-        emergency_image_extra_info = {"imageWidth": 1920,
-                                      "imageHeight": 1080,
-                                      "width": 0, "height": 0, "x": 0, "y": 0, "flag": 2,
-                                      "top_y": None, "left_x": None,
-                                      "points": [],
-                                      "recognitionTime": "2023-01-14 08:33:36 386",
-                                      "processEndTime": "2023-01-14 08:33:36 386",
-                                      "nettyReceiveTime": "2023-01-14 08:33:36 540",
-                                      "faceFeature": None,
-                                      "instanceColor": "#C90740"}
-        emergency_image_extra_info['imageWidth'] = msg_body['img_w']
-        emergency_image_extra_info['imageHeight'] = msg_body['img_h']
-
-        emergency_image_extra_info['recognitionTime'] = msg_body['algorithm_time']
-        emergency_image_extra_info['processEndTime'] = msg_body['algorithm_time']
-        time_d = datetime.fromtimestamp(int(msg_body['send_time']) / 1000)
-        emergency_image_extra_info['nettyReceiveTime'] = time_d.strftime("%Y-%m-%d %H:%M:%S")
-
-        # 协议中的图片字段base64解码拿到告警图片的二进制数据
-        image_base64 = msg_body['img_data_jpeg']
-        image_byte = base64.b64decode(image_base64)
-
-        # 生成告警图的路径
-        sub_source_id = uuid.uuid4().hex
-        emergency_image = pathhead + sub_source_id + '?' + 'date=%s' % emergency_dir
-
-        # 整理来自算法的告警，将同类型算法告警放在一起
-        result = {}
-        target_list = msg_body['target_list']
-        for x in target_list:
-            for item in x:
-                # item['type'] : 算法的识别码
-                Identifier = item['type']
-                algorithm_constant_num = Identifier_to_constant(str(Identifier))
-                if not algorithm_constant_num:
-                    continue
-
-                temp = emergency_image_extra_info.copy()
-                temp['x'] = item['x']
-                temp['y'] = item['y']
-                temp['width'] = item['w']
-                temp['height'] = item['h']
-                # 尾随和离岗的处理方式不同
-                if algorithm_constant_num in ["5", "114", '128', '15']:  # 尾随、离岗、人流量密度,单人作业
-                    roi_list = item['roi_list']
-                    if not roi_list:
-                        continue
-                    for x in roi_list:
-                        temp_po = temp.copy()
-                        temp_po['points'] = points_transform(x['points'])
-                        temp_po['left_x'] = x['left_x']
-                        temp_po['top_y'] = x['top_y']
-                        if Identifier in result.keys():
-                            result[Identifier].append(temp_po)
-                        else:
-                            result[Identifier] = []
-                            result[Identifier].append(temp_po)
-                else:
-                    if Identifier in result.keys():
-                        result[Identifier].append(temp)
-                    else:
-                        result[Identifier] = []
-                        result[Identifier].append(temp)
+        result, image_byte, sub_source_id, emergency_image = _build_grouped_algorithm_targets(msg_body, emergency_dir)
         # 不同算法分开处理
         alarm_algs = []
         mainlogger.debug("result-----------------{}".format(result))
