@@ -1,10 +1,10 @@
 """
 Logical MongoDB collection names.
 
-wave-energy-station uses a hybrid: HTTP 布控 APIs use ``control_manage_mission`` /
-``control_device_algorithm_associate``; some analytic paths (e.g. 热成像) still join
-``work_flow_*`` tables. Mongo / wave-ai-spirit 门控以 ``work_flow_mission`` 为主.
-Centralizing strings allows a single edit when aligning schemas.
+wave-energy-station 布控与告警主路径统一为 ``control_manage_mission`` +
+``control_device_algorithm_associate``；热成像告警（算法号 105）已与主路径对齐，
+不再依赖 ``work_flow_mission`` / ``odin_business_control_manage`` 参与关联。
+Mongo / wave-ai-spirit 仍可为主 ``work_flow_mission`` Schema，Constants 供跨产品引用。
 """
 
 # --- Energy 布控主表（与 Mongo 线 odin_business_control_manage / work_flow_mission 并存）---

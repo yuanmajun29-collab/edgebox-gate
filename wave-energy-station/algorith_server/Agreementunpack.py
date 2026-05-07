@@ -28,11 +28,7 @@ import Utils.edgebox_repo  # noqa: F401
 from edgebox_db.mongo_collections import (
     CONTROL_DEVICE_ALGORITHM_ASSOCIATE,
     CONTROL_MANAGE_MISSION,
-    ODIN_BUSINESS_CONTROL_MANAGE,
     WORK_FLOW_ALGORITHM_CONSTANT,
-    WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,
-    WORK_FLOW_MISSION,
-    WORK_FLOW_MISSION_DEVICE_ASSOCIATE,
 )
 import traceback
 import Utils.glv as glv
@@ -56,6 +52,9 @@ pathhead = 'http://%s:%s/net-web/control/event_images/'%(host_ip,nginx_port)
 image_dir = EMERGENCY_IMG_PATH
 SYN_EMERGENCY = '/business/sync/synAddAllEmergency'
 SYN_MINIO_DATA = '/business/sync/synFileToMinio'
+
+# 热成像温度告警固定走算法常量号 105（与 find_associate_mission4 / 布控关联表一致）
+THERMAL_ALGORITHM_CONSTANT_NUM = '105'
 
 
 def _json_loads_message_body(msg_body):
@@ -507,26 +506,7 @@ def points_transform(pt:list):
         points.append(item)
     return points
 
-def find_associate_mission3(device_id,alg_num,alg_col,mission_col,asso_col):
-    '''
-    说明：算法发来的告警信息，找到匹配的布控任务
-    '''
-    res = list()
-    mission_items = mission_col.find({'mission_status':0})
-    for mission_item in mission_items:
-        mission_id = mission_item['mission_id']
-        query1 = {'device_id':device_id,'mission_id':mission_id}
-        asso_item = asso_col.find_one(query1)
-        if not asso_item:
-            continue
-        query2 = {'algorithm_constant_num':alg_num,"is_use":1,'mission_id':mission_id}
-        alg_items = alg_col.find_one(query2)
-        if not alg_items:
-            continue
-        res.append(mission_item['mission_id'])
-    return res    
-
-def find_associate_mission4(device_id,algorithm_constant_id,mission_col,asso_col):
+def points_transform(pt:list):
     '''
     说明：算法发来的告警信息，找到匹配的布控任务
     '''
@@ -1008,13 +988,17 @@ def handle_hikhotcam(req,mongo:ToMongo,mqtt_client:mqtt.Client,sms:SendSmsResque
 
         device_id = device_item.get('camera_id')
 
-        mission_associate_col =  my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
-        alg_col =                my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)
-        mission_col =            my_db.get_col(WORK_FLOW_MISSION)
-
-        mission_id_list = find_associate_mission3(device_id,'105',alg_col,mission_col,mission_associate_col)
+        asso_col = my_db.get_col(CONTROL_DEVICE_ALGORITHM_ASSOCIATE)
+        mission_col = my_db.get_col(CONTROL_MANAGE_MISSION)
+        alg_constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
+        constant_item = alg_constant_col.find_one(
+            {'algorithm_constant_num': THERMAL_ALGORITHM_CONSTANT_NUM})
+        if not constant_item:
+            return
+        thermal_algorithm_constant_id = constant_item['algorithm_constant_id']
+        mission_id_list = find_associate_mission4(
+            device_id, thermal_algorithm_constant_id, mission_col, asso_col)
         if not mission_id_list:
-            # 未查到关联的任务
             return
 
         position_associate_col = my_db.get_col("odin_device_device_position_associate")
@@ -1022,7 +1006,6 @@ def handle_hikhotcam(req,mongo:ToMongo,mqtt_client:mqtt.Client,sms:SendSmsResque
         work_model_col =         my_db.get_col('authority_work_model')
         emergency_col =          my_db.get_col('odin_business_emergency_record')
         emergency_detail_col =   my_db.get_col('odin_business_emergency_record_detail_info')
-        alg_constant_col =       my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
 
         #查询组织id信息
         organization_id = get_organizationId(work_model_col)
@@ -1047,172 +1030,153 @@ def handle_hikhotcam(req,mongo:ToMongo,mqtt_client:mqtt.Client,sms:SendSmsResque
 
 
         for mission_id in mission_id_list:
-            missioncol_item = mission_col.find_one({'mission_id':mission_id})
-            #一个任务绑定多个同种算法
-            instance_items = alg_col.find({'mission_id':mission_id,'algorithm_constant_num':"105"})
-            if not instance_items:
+            missioncol_item = mission_col.find_one({'control_id': mission_id})
+            if not missioncol_item:
                 continue
-            for instance_item in instance_items:
-                alg_service_num = instance_item.get('algorithm_service_num',None)
-                constant_item = alg_constant_col.find_one({'algorithm_service_num':alg_service_num})
 
-                alg_name = constant_item['algorithm_constant_name']
+            emergency_level = constant_item['algorithm_level']
+            missionWorkTime = missioncol_item.get('emergency_response_time')
+            if not missionWorkTime:
+                missionWorkTime = '[{"time":"00:00:00-23:59:59"}]'
+            alg_interval = constant_item.get('algorithm_interval')
+            emergencyIntervalTime = int(alg_interval) if alg_interval is not None else 5
 
-                if not constant_item:
-                    continue
-                if missioncol_item:
-                    emergency_level = constant_item['algorithm_level']
-                    missionWorkTime = missioncol_item['mission_start_time']
-                    emergencyIntervalTime = constant_item['algorithm_interval']
-                else:
-                    emergency_level = 1   #默认为1
-                    missionWorkTime = '[{"time":"00:00:00-23:59:59"}]'
-                    emergencyIntervalTime = 5
-                
-                #过滤不在感知时段的告警事件
-                flag_in_timeperiod = emergency_timeperiod(missionWorkTime,emergency_time)   
-                if not flag_in_timeperiod:
-                    continue
-                res = filter_emergency(device_id,mission_id,alg_service_num,re_pool,emergencyIntervalTime)
-                if res:
-                    #print('不满足%s秒告警间隔:'%str(emergencyIntervalTime))
-                    continue
+            flag_in_timeperiod = emergency_timeperiod(missionWorkTime, emergency_time)
+            if not flag_in_timeperiod:
+                continue
+            res = filter_emergency(
+                device_id, mission_id, THERMAL_ALGORITHM_CONSTANT_NUM, re_pool, emergencyIntervalTime)
+            if res:
+                continue
 
-                control_info = my_db.get_col(ODIN_BUSINESS_CONTROL_MANAGE).find_one({'control_id':mission_id})
-                if not control_info:
-                    continue
-                
-                #将告警图存入磁盘
-                hot_image = flist[1]  #0是普通摄像机  1是热成像摄像机
-                writepic_thread = Thread(target=write_hot_image,args=[sub_source_id,emergency_dir,hot_image])
-                writepic_thread.start()
-                img_path = image_dir + emergency_dir + '/' + sub_source_id + '.jpg'
+            #将告警图存入磁盘
+            hot_image = flist[1]  #0是普通摄像机  1是热成像摄像机
+            writepic_thread = Thread(target=write_hot_image,args=[sub_source_id,emergency_dir,hot_image])
+            writepic_thread.start()
+            img_path = image_dir + emergency_dir + '/' + sub_source_id + '.jpg'
 
-                control_name = control_info['control_name']
-                storage_time = control_info['storage_time']
-                storage_num = control_info['storage_num']
+            control_name = missioncol_item['control_name']
+            storage_time = missioncol_item['storage_time']
+            storage_num = missioncol_item['storage_num']
 
-                model_path = constant_item['algorithm_constant_name']  #从数据库查model_path
-                algorithm_color = constant_item['algorithm_color']
+            model_path = constant_item['algorithm_constant_name']
 
-                num = None #图片框选数
+            num = None #图片框选数
 
-                emergency_record_id = uuid.uuid4().hex
-                emergency_record_detail_info_id = uuid.uuid4().hex
+            emergency_record_id = uuid.uuid4().hex
+            emergency_record_detail_info_id = uuid.uuid4().hex
 
-                time_alg = emergency_time
-                
-                data1 = {'emergency_record_id':emergency_record_id,
-                        'emergency_level':emergency_level,
-                        'emergency_position':emergency_position,
-                        'emergency_media_info':None,   #媒体视频信息
-                        'mission_id':mission_id,
-                        'emergency_time':emergency_time,
-                        'alarm_status':"1",
-                        'emergency_lon_and_lat':emergency_lon_and_lat,
-                        'organization_id':organization_id,
-                        'create_time':datetime.now(),
-                        'model_name': model_path,
-                        'model_path': model_path,
-                        'emergency_audio':'alarm1',  #默认
-                        'position_id':position_id,
-                        'control_name':control_name,
-                        'tid':None,
-                        'trid':None,
-                        'device_num':None,
-                        'storage_time':storage_time,
-                        'storage_num':storage_num,
-                        'device_id':device_id,
-                        'device_name':device_item.get('camera_name'),
-                        'emergency_exec_name':None,
-                        'emergency_exec_desc':None,
-                        'emergency_exec_result':None,
-                        'emergency_exec_flag':0,
-                        'emergency_music_close_method':1,
-                        'emergency_music_close_status':1,
-                        'sub_source_id':sub_source_id,
-                        'is_wrong':0
-                        }
+            data1 = {'emergency_record_id':emergency_record_id,
+                    'emergency_level':emergency_level,
+                    'emergency_position':emergency_position,
+                    'emergency_media_info':None,   #媒体视频信息
+                    'mission_id':mission_id,
+                    'emergency_time':emergency_time,
+                    'alarm_status':"1",
+                    'emergency_lon_and_lat':emergency_lon_and_lat,
+                    'organization_id':organization_id,
+                    'create_time':datetime.now(),
+                    'model_name': model_path,
+                    'model_path': model_path,
+                    'emergency_audio':'alarm1',  #默认
+                    'position_id':position_id,
+                    'control_name':control_name,
+                    'tid':None,
+                    'trid':None,
+                    'device_num':None,
+                    'storage_time':storage_time,
+                    'storage_num':storage_num,
+                    'device_id':device_id,
+                    'device_name':device_item.get('camera_name'),
+                    'emergency_exec_name':None,
+                    'emergency_exec_desc':None,
+                    'emergency_exec_result':None,
+                    'emergency_exec_flag':0,
+                    'emergency_music_close_method':1,
+                    'emergency_music_close_status':1,
+                    'sub_source_id':sub_source_id,
+                    'is_wrong':0
+                    }
 
-                data2 = {'emergency_record_detail_info_id':emergency_record_detail_info_id,
-                        'emergency_record_id':emergency_record_id,
-                        'video_preview_image': emergency_image,
-                        'discern_time': emergency_time,
-                        'group_num': None,
-                        'group_matter_name': model_path,
-                        'emergency_image': emergency_image,
-                        'base_personnel_image': None,
-                        'base_personnel_name': None,
-                        'base_personnel_id': None,
-                        'base_personnel_sex': None,
-                        'base_personnel_nation': None,
-                        'base_personnel_birth': None,
-                        'num': num ,
-                        'algorithm_constant_num' : "105",
-                        'emergency_image_extra_info' : None,
-                        'step_time':None  ,     
-                        'step_num':None   
-                        }
-                
+            data2 = {'emergency_record_detail_info_id':emergency_record_detail_info_id,
+                    'emergency_record_id':emergency_record_id,
+                    'video_preview_image': emergency_image,
+                    'discern_time': emergency_time,
+                    'group_num': None,
+                    'group_matter_name': model_path,
+                    'emergency_image': emergency_image,
+                    'base_personnel_image': None,
+                    'base_personnel_name': None,
+                    'base_personnel_id': None,
+                    'base_personnel_sex': None,
+                    'base_personnel_nation': None,
+                    'base_personnel_birth': None,
+                    'num': num ,
+                    'algorithm_constant_num' : THERMAL_ALGORITHM_CONSTANT_NUM,
+                    'emergency_image_extra_info' : None,
+                    'step_time':None  ,     
+                    'step_num':None   
+                    }
 
-                my_db.insert('odin_business_emergency_record_detail_info',
-                                data2
-                            )
+            my_db.insert('odin_business_emergency_record_detail_info',
+                         data2)
 
-                my_db.insert('odin_business_emergency_record',
-                                data1
-                                )
+            my_db.insert('odin_business_emergency_record',
+                         data1)
 
-                #判断工作模式，是否需要提交到远程
-                work_model,url,minio_url,bind_organizationid = get_sync_url(work_model_col)
-                if work_model == '1':
-                    submit_thread = Thread(target=emergency_sync,args=[url,minio_url,emergency_dir,img_path,data1,data2,bind_organizationid])
-                    submit_thread.start()
-                
-                #删除过期告警和超过存储数目的告警
-                delete_thread = Thread(target=delete_overdate_emergency,args=[emergency_col,emergency_detail_col,mission_id,storage_time,storage_num])
-                delete_thread.start()
+            #判断工作模式，是否需要提交到远程
+            work_model, url, minio_url, bind_organizationid = get_sync_url(work_model_col)
+            if work_model == '1':
+                submit_thread = Thread(
+                    target=emergency_sync,
+                    args=[url, minio_url, emergency_dir, img_path, data1, data2, bind_organizationid])
+                submit_thread.start()
 
-                #发送声光告警
-                Alarm_thread = Thread(target=equip_alarm,args=[my_db,mission_id,constant_item])
-                Alarm_thread.start()
+            #删除过期告警和超过存储数目的告警
+            delete_thread = Thread(
+                target=delete_overdate_emergency,
+                args=[emergency_col, emergency_detail_col, mission_id, storage_time, storage_num])
+            delete_thread.start()
 
-                if emergency_popchoice():
-                    #发布弹窗
-                    publish_mqtt_thread = Thread(target=publish_mqtt,args=[mqtt_client,None,data1,data2,organization_id])
-                    publish_mqtt_thread.start()
+            Alarm_thread = Thread(target=equip_alarm, args=[my_db, mission_id, constant_item])
+            Alarm_thread.start()
 
-                if smsconfig_repull():
-                    mainlogger.info("---重新拉取短信sms配置---")
-                    sms.get_sms_config()
+            if emergency_popchoice():
+                publish_mqtt_thread = Thread(
+                    target=publish_mqtt, args=[mqtt_client, None, data1, data2, organization_id])
+                publish_mqtt_thread.start()
 
-                if sms_repull():
-                    mainlogger.info("---重新拉取短信投递任务---")
-                    sms.get_sms_delivery()
+            if smsconfig_repull():
+                mainlogger.info("---重新拉取短信sms配置---")
+                sms.get_sms_config()
 
-                sms_msg =  {"controlName":control_name,
-                            "modelName":model_path,
-                            "modelPath":model_path,
-                            "deviceName":data1['device_name'],
-                            "adress":emergency_position,
-                            "time":emergency_time,
-                            "emergencyImage":None,
-                            "emergencyImageUrls":emergency_image,
-                            'controlId':mission_id,
-                            'deviceId':device_id,
-                            'modelId':constant_item['algorithm_constant_id'],
-                            'emergencyId':emergency_record_id,
-                            'positionId':position_id,
-                            }
-                params_dict = {'organization_id':organization_id,
-                            'emergency_record_id':emergency_record_id}
-                sms.send_sms_thread(sms_msg,params_dict)
-                        
-                if webhook_repull():
-                    mainlogger.info("---重新拉取告警转发任务---")
-                    webhook.get_webhook_delivery()
-                webhook.send_webhook_thread(sms_msg,params_dict)
-                
+            if sms_repull():
+                mainlogger.info("---重新拉取短信投递任务---")
+                sms.get_sms_delivery()
+
+            sms_msg = {"controlName": control_name,
+                       "modelName": model_path,
+                       "modelPath": model_path,
+                       "deviceName": data1['device_name'],
+                       "adress": emergency_position,
+                       "time": emergency_time,
+                       "emergencyImage": None,
+                       "emergencyImageUrls": emergency_image,
+                       'controlId': mission_id,
+                       'deviceId': device_id,
+                       'modelId': constant_item['algorithm_constant_id'],
+                       'emergencyId': emergency_record_id,
+                       'positionId': position_id,
+                       }
+            params_dict = {'organization_id': organization_id,
+                           'emergency_record_id': emergency_record_id}
+            sms.send_sms_thread(sms_msg, params_dict)
+
+            if webhook_repull():
+                mainlogger.info("---重新拉取告警转发任务---")
+                webhook.get_webhook_delivery()
+            webhook.send_webhook_thread(sms_msg, params_dict)
+
     except Exception as e:
         import traceback
         mainlogger.info(''+traceback.format_exc())
