@@ -25,7 +25,6 @@ class AlgorithServer():
     __flag = False
 
     def __new__(cls, *args, **kwargs):
-        # super().__new__(cls)
         if cls.__instance is None:
             cls.__instance = super().__new__(cls)
         return cls.__instance
@@ -36,10 +35,6 @@ class AlgorithServer():
             self.context = context
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-            # self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE,1*60)
-            # self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL,30)
-            # self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT,5)
 
             self.ip = "0.0.0.0"
             self.socket.bind((self.ip, 6666))

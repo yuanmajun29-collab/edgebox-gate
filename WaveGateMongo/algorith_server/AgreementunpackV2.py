@@ -100,10 +100,7 @@ def handle_alg_send_message(msg_cache, mongo, mqtt_client, sms, webhook, re_pool
             mainlogger.debug("--smallPlaceEmergency:%s" % msg)
             handle_4004_msg(msg, my_db=mongo)
     except Exception as e:
-        mainlogger.debug("handle_alg_send_message error: {}".format(e))
-
-
-import pytz
+            mainlogger.debug("handle_alg_send_message error: {}".format(e))
 
 
 def check_crossroads_algo_msg(my_db, device_id, alg_num):
@@ -150,41 +147,17 @@ def check_and_save_crossroads_algo_msg(my_db, device_id, identifier, target_list
             pedestrian_alg_num = PEDESTRIAN_ALG_NUM
             vehicle_alg_num = VEHICLE_ALG_NUM
 
-            timestamp_s = emergency_time_stamp / 1000.0
-            local_receive_at = datetime.now()  # 北京时间
-            # 将时间戳转换为UTC时间的datetime对象
-            alert_time_utc = datetime.utcfromtimestamp(timestamp_s)
-            # 转换为UTC时间
-            receive_at_utc = local_receive_at.astimezone(pytz.utc)
             if alg_num == pedestrian_alg_num:
-                alert_type = 'pedestrian'
-                data = {
-                    'device_identification': device_id,
-                    'alert_type': alert_type,
-                    'alert_time': alert_time_utc,
-                    'remark': send_time_stamp,  # 算法发来的时间戳，预留说明
-                    'receive_at': receive_at_utc,
-                }
-                # my_db.insert('alert_log', data)
                 queue_add_msg = (device_id, send_time_stamp, MESSAGE_CAMERA_PEDESTRIAN)
                 vehicle_pedestrian_events_queue.put(queue_add_msg)
             elif alg_num == vehicle_alg_num:
                 # 不再依据alg消息判断车是否驶入/驶离
-                alert_type = 'vehicle'
-                data = {
-                    'device_identification': device_id,
-                    'alert_type': alert_type,
-                    'alert_time': alert_time_utc,
-                    'remark': send_time_stamp,  # 算法发来的时间戳，预留说明
-                    'receive_at': receive_at_utc,
-                }
                 send_time = datetime.fromtimestamp(send_time_stamp / 1000).strftime("%Y-%m-%d %H:%M:%S.%f")
                 receive_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
                 emergency_format_time = datetime.fromtimestamp(emergency_time_stamp / 1000).strftime("%Y-%m-%d %H:%M:%S.%f")
                 mainlogger.info("ALG告警时间:{},ALG算法传递时间:{},ALG算法收到时间:{}".format(emergency_format_time, send_time, receive_time))
                 queue_add_msg = (device_id, emergency_time_stamp, MESSAGE_CAMERA_VEHICLES)
                 vehicle_pedestrian_events_queue.put(queue_add_msg)
-                # my_db.insert('alert_log', data)
             else:
                 return
     except Exception as e:
@@ -512,7 +485,6 @@ def handle_msg(msg_body, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSmsR
                     alg_service_num = instance_item.get('algorithm_service_num', None)
                     constant_item = alg_constant_col.find_one({'algorithm_service_num': alg_service_num})
 
-                    ######注释内容
                     alg_name = constant_item['algorithm_constant_name']
                     alarm_algs.append(alg_name)
 
@@ -870,7 +842,6 @@ def handle_3001_msg(msg_body, mongo: ToMongo):
     max_camera = msg['max_camera']
     server_version = msg['server_version']
     my_db = mongo
-    # num = my_db.get_col("authority_base_info").find().count()
     num = my_db.get_col("authority_base_info").estimated_document_count()
     if num == 0:
         base_config = BASE_INFO
@@ -1211,9 +1182,6 @@ def format_datestr_with_zone(datetime_str: str):
         format_ = format_ + '.%f'
     if '+' in datetime_str:
         datetime_str = datetime_str.split('+')[0]
-    # zone_ = re.search(r'[+-]\d{2}:\d{2}', datetime_str)
-    # if zone_:
-    #     format_ = format_ + '%z'
     if 'T' in datetime_str:
         format_ = format_.replace(' ', 'T')
     return datetime.strptime(datetime_str, format_)

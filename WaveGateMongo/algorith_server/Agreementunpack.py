@@ -93,7 +93,6 @@ def judge_cache(msg_cache, mongo, mqtt_client, sms, webhook, re_pool):
                         msg_body = msg_cache[55:length]
                         msg_type = msg_cache[18:23]
                         mainlogger.debug('--msg_type : %s' % (msg_type,))
-                        # mainlogger.debug('--msg_total : ' + msg_body)
                         if msg_type == b"03008":
                             # 人脸特征信息存入队列
                             mainlogger.debug('--msgBody: %s' % msg_body)
@@ -155,7 +154,6 @@ def judge_cache(msg_cache, mongo, mqtt_client, sms, webhook, re_pool):
         return msg_cache
 
 
-# import datetime
 import pytz
 
 
@@ -563,7 +561,6 @@ def handle_msg(msg_body, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSmsR
                     alg_service_num = instance_item.get('algorithm_service_num', None)
                     constant_item = alg_constant_col.find_one({'algorithm_service_num': alg_service_num})
 
-                    ######注释内容
                     alg_name = constant_item['algorithm_constant_name']
                     alarm_algs.append(alg_name)
 
@@ -921,7 +918,6 @@ def handle_3001_msg(msg_body, mongo: ToMongo):
     max_camera = msg['max_camera']
     server_version = msg['server_version']
     my_db = mongo
-    # num = my_db.get_col("authority_base_info").find().count()
     num = my_db.get_col("authority_base_info").estimated_document_count()
     if num == 0:
         base_config = BASE_INFO
@@ -1262,9 +1258,6 @@ def format_datestr_with_zone(datetime_str: str):
         format_ = format_ + '.%f'
     if '+' in datetime_str:
         datetime_str = datetime_str.split('+')[0]
-    # zone_ = re.search(r'[+-]\d{2}:\d{2}', datetime_str)
-    # if zone_:
-    #     format_ = format_ + '%z'
     if 'T' in datetime_str:
         format_ = format_.replace(' ', 'T')
     return datetime.strptime(datetime_str, format_)
