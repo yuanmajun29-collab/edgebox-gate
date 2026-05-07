@@ -319,7 +319,81 @@ def _build_grouped_algorithm_targets(msg_body: dict, emergency_dir: str):
                     result[Identifier] = []
                     result[Identifier].append(temp)
 
-    return result, image_byte, sub_source_id, emergency_image
+    return result, image_byte, sub_source_id, emergency_image, target_list, image_base64
+
+
+def _build_emergency_db_payloads(
+        msg_body: dict,
+        emergency_level, emergency_time, alarm_status,
+        emergency_position, emergency_lon_and_lat,
+        organization_id, create_time,
+        model_name, model_path, algorithm_color,
+        position_id, control_name, storage_time, storage_num,
+        device_id, device_name, mission_id,
+        sub_source_id, emergency_image, algorithm_constant_num,
+        info_list,
+):
+    """组装主表/明细表写入字典，并填充 info_list 内展示用颜色与简称。"""
+    num = len(info_list)
+    for extra_info in info_list:
+        extra_info['instanceColor'] = algorithm_color
+        extra_info['shortName'] = model_name
+    emergency_record_id = uuid.uuid4().hex
+    emergency_record_detail_info_id = uuid.uuid4().hex
+    time_alg = msg_body['algorithm_time']
+    time_alg = datetime.fromtimestamp(int(time_alg / 1000))
+    discern_time = time_alg.strftime("%Y-%m-%d %H:%M:%S")
+    data1 = {'emergency_record_id': emergency_record_id,
+             'emergency_level': emergency_level,
+             'emergency_position': emergency_position,
+             'emergency_media_info': None,  # 媒体视频信息
+             'mission_id': mission_id,
+             'emergency_time': emergency_time,
+             'alarm_status': alarm_status,
+             'emergency_lon_and_lat': emergency_lon_and_lat,
+             'organization_id': organization_id,
+             'create_time': create_time,
+             'model_name': model_name,
+             'model_path': model_path,
+             'emergency_audio': 'alarm1',  # 默认
+             'position_id': position_id,
+             'control_name': control_name,
+             'tid': None,
+             'trid': None,
+             'device_num': None,
+             'storage_time': storage_time,
+             'storage_num': storage_num,
+             'device_id': device_id,
+             'device_name': device_name,
+             'emergency_exec_name': None,
+             'emergency_exec_desc': None,
+             'emergency_exec_result': None,
+             'emergency_exec_flag': 0,
+             'emergency_music_close_method': 1,
+             'emergency_music_close_status': 1,
+             'sub_source_id': sub_source_id,
+             'is_wrong': 0
+             }
+    data2 = {'emergency_record_detail_info_id': emergency_record_detail_info_id,
+             'emergency_record_id': emergency_record_id,
+             'video_preview_image': emergency_image,
+             'discern_time': discern_time,
+             'group_num': None,
+             'group_matter_name': model_path,
+             'emergency_image': emergency_image,
+             'base_personnel_image': None,
+             'base_personnel_name': None,
+             'base_personnel_id': None,
+             'base_personnel_sex': None,
+             'base_personnel_nation': None,
+             'base_personnel_birth': None,
+             'num': num,
+             'algorithm_constant_num': algorithm_constant_num,
+             'emergency_image_extra_info': json.dumps(info_list, ensure_ascii=False),
+             'step_time': None,
+             'step_num': None
+             }
+    return emergency_record_id, emergency_record_detail_info_id, data1, data2
 
 
 def handle_msg(msg_body, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSmsResqueset, webhook: Sendwebrequest,
@@ -361,7 +435,8 @@ def handle_msg(msg_body, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSmsR
         alarm_status = "1"  # 默认为1
         create_time = datetime.now()
 
-        result, image_byte, sub_source_id, emergency_image = _build_grouped_algorithm_targets(msg_body, emergency_dir)
+        result, image_byte, sub_source_id, emergency_image, target_list, image_base64 = _build_grouped_algorithm_targets(
+            msg_body, emergency_dir)
         # 不同算法分开处理
         alarm_algs = []
         mainlogger.debug("result-----------------{}".format(result))
@@ -450,69 +525,17 @@ def handle_msg(msg_body, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSmsR
                     storage_num = control_info['storage_num']
 
                     info_list = result[identifer]
-                    num = len(info_list)  # 图片框选数
-                    for extra_info in info_list:
-                        extra_info['instanceColor'] = algorithm_color
-                        extra_info['shortName'] = model_name
-
-                    emergency_record_id = uuid.uuid4().hex
-                    emergency_record_detail_info_id = uuid.uuid4().hex
-
-                    time_alg = msg_body['algorithm_time']
-                    time_alg = datetime.fromtimestamp(int(time_alg / 1000))
-                    discern_time = time_alg.strftime("%Y-%m-%d %H:%M:%S")
-
-                    data1 = {'emergency_record_id': emergency_record_id,
-                             'emergency_level': emergency_level,
-                             'emergency_position': emergency_position,
-                             'emergency_media_info': None,  # 媒体视频信息
-                             'mission_id': mission_id,
-                             'emergency_time': emergency_time,
-                             'alarm_status': alarm_status,
-                             'emergency_lon_and_lat': emergency_lon_and_lat,
-                             'organization_id': organization_id,
-                             'create_time': create_time,
-                             'model_name': model_name,
-                             'model_path': model_path,
-                             'emergency_audio': 'alarm1',  # 默认
-                             'position_id': position_id,
-                             'control_name': control_name,
-                             'tid': None,
-                             'trid': None,
-                             'device_num': None,
-                             'storage_time': storage_time,
-                             'storage_num': storage_num,
-                             'device_id': device_id,
-                             'device_name': device_name,
-                             'emergency_exec_name': None,
-                             'emergency_exec_desc': None,
-                             'emergency_exec_result': None,
-                             'emergency_exec_flag': 0,
-                             'emergency_music_close_method': 1,
-                             'emergency_music_close_status': 1,
-                             'sub_source_id': sub_source_id,
-                             'is_wrong': 0
-                             }
-
-                    data2 = {'emergency_record_detail_info_id': emergency_record_detail_info_id,
-                             'emergency_record_id': emergency_record_id,
-                             'video_preview_image': emergency_image,
-                             'discern_time': discern_time,
-                             'group_num': None,
-                             'group_matter_name': model_path,
-                             'emergency_image': emergency_image,
-                             'base_personnel_image': None,
-                             'base_personnel_name': None,
-                             'base_personnel_id': None,
-                             'base_personnel_sex': None,
-                             'base_personnel_nation': None,
-                             'base_personnel_birth': None,
-                             'num': num,
-                             'algorithm_constant_num': algorithm_constant_num,
-                             'emergency_image_extra_info': json.dumps(info_list, ensure_ascii=False),
-                             'step_time': None,
-                             'step_num': None
-                             }
+                    emergency_record_id, emergency_record_detail_info_id, data1, data2 = _build_emergency_db_payloads(
+                        msg_body,
+                        emergency_level, emergency_time, alarm_status,
+                        emergency_position, emergency_lon_and_lat,
+                        organization_id, create_time,
+                        model_name, model_path, algorithm_color,
+                        position_id, control_name, storage_time, storage_num,
+                        device_id, device_name, mission_id,
+                        sub_source_id, emergency_image, algorithm_constant_num,
+                        info_list,
+                    )
 
                     my_db.insert('odin_business_emergency_record_detail_info',
                                  data2
