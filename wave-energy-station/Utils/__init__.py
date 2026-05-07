@@ -1,2 +1,4 @@
-"""Phase-1 compat: canonical import path `Utils` maps to `utils` implementation.
-Same layout as WaveGateMongo / wave-ai-spirit."""
+"""Canonical utilities package (energy-station), matching WaveGateMongo / wave-ai-spirit naming.
+
+Legacy import path `utils.*` remains as thin re-exports for compatibility.
+"""

@@ -1,3 +1,2 @@
-import redis
-
-redis_database = redis.Redis(host='localhost', port=6379,password="waveRedisAdmin123")
+"""Legacy package `alg`: use `algorith_server` instead."""
+from algorith_server.redis_connect import *  # noqa: F401,F403
