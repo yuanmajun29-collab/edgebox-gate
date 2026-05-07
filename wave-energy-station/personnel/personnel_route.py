@@ -5,17 +5,17 @@ import json
 import os
 import time
 import base64
-from utils.db import *
-from utils.jwt_verify import *
+from Utils.db import *
+from Utils.jwt_verify import *
 from emergency.advise_router import decode_token
 from emergency.db_router import transfer_img_url
 from datetime import datetime
 from config import PERSON_IMG_URL, FACE_IDENT_URL
-from alg.AgreementBuilder import pack_face_3005
-from alg.Agreementunpack import host_ip
+from algorith_server.AgreementBuilder import pack_face_3005
+from algorith_server.Agreementunpack import host_ip
 from msg_queue import faceidentification_queue
 from .person_misc import FaceImageDBAPI, FaceFeatureDBAPI, verify_social_num
-import utils.glv as glv
+import Utils.glv as glv
 
 bp = Blueprint("personnel", __name__, url_prefix='/net-web')
 
@@ -651,7 +651,7 @@ def validPersonImage():
     face_msg_str = json.dumps(face_msg)
     total_msg = pack_face_3005(face_msg_str)
 
-    from alg.AlgorithServer_v2 import SenderThread
+    from algorith_server.AlgorithServer_v2 import SenderThread
     sender = SenderThread(current_app.app_context())
     sender.send_face_message(facemsg=total_msg)
 

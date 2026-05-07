@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
-from utils.Utils import generate_log
+from Utils.Utils import generate_log
 import uuid
-from utils.db import ToMongo
+from Utils.db import ToMongo
 from datetime import datetime
 
 bp = Blueprint("positions", __name__, url_prefix='/net-web')

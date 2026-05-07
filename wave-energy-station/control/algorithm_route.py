@@ -2,10 +2,10 @@ from datetime import datetime
 from threading import Thread
 
 from flask import Blueprint
-from utils.Utils import *
-from utils.db import *
-from utils.jwt_verify import *
-from utils.datacfg import constant_database, constant_web
+from Utils.Utils import *
+from Utils.db import *
+from Utils.jwt_verify import *
+from Utils.datacfg import constant_database, constant_web
 from system.sync_model import sync_alg_setting
 
 bp = Blueprint("algconstant", __name__, url_prefix='/net-web')

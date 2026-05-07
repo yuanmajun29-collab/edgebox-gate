@@ -1,7 +1,7 @@
 import requests
 import json
-from utils.db import ToMongo
-import utils.logger as logger
+from Utils.db import ToMongo
+import Utils.logger as logger
 from threading import Thread
 from datetime import datetime
 import uuid

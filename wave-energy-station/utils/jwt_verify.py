@@ -5,8 +5,8 @@ from flask import g, request ,current_app,jsonify
 from jwt import exceptions
 from config import JWT_KEY
 
-from utils.Utils import set_fail_result
-import utils.logger as logger
+from Utils.Utils import set_fail_result
+import Utils.logger as logger
 import traceback
 
 mainlogger = logger.getLogger('main')

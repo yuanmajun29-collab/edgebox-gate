@@ -3,7 +3,7 @@ import cv2
 import json
 import base64
 from PIL import Image, ImageDraw
-import utils.logger as logger
+import Utils.logger as logger
 
 mainlogger = logger.getLogger('main')
 

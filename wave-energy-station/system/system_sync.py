@@ -1,11 +1,11 @@
 import json
 import requests
 from config import BASE_INFO
-from alg.redis_connect import redis_database
+from algorith_server.redis_connect import redis_database
 from system.system_misc import *
-from utils.Utils import set_fail_result, set_success_result
+from Utils.Utils import set_fail_result, set_success_result
 from threading import Thread
-import utils.logger as logger
+import Utils.logger as logger
 
 import urllib3
 urllib3.disable_warnings()  # 禁用 https认证没有证书的 warning
@@ -476,7 +476,7 @@ class SyncDataTimer():
             query = {'name': 'control'}
             self.my_db.update("system_data_version", query, {"$set": item})
 
-            # from alg.AlgorithServer_v2 import SenderThread
+            # from algorith_server.AlgorithServer_v2 import SenderThread
             # sender = SenderThread(context=[])
             # sender.send_reboot_message()
 
@@ -493,7 +493,7 @@ class SyncDataTimer():
             query = {'name': 'device'}
             self.my_db.update("system_data_version", query, {"$set": item})
 
-            # from alg.AlgorithServer_v2 import SenderThread
+            # from algorith_server.AlgorithServer_v2 import SenderThread
             # sender = SenderThread(context=[])
             # sender.send_3007_message()
             # #摄像头的url变了，重新下发摄像头数据

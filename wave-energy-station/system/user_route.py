@@ -1,11 +1,11 @@
 import json
 import uuid
 from flask import Blueprint, jsonify
-from utils.db import ToMongo
-from utils.Utils import set_success_result, generate_log
-from utils.jwt_verify import *
-from utils.ver_code_image import *
-from utils.redis_connect import redis_database
+from Utils.db import ToMongo
+from Utils.Utils import set_success_result, generate_log
+from Utils.jwt_verify import *
+from Utils.ver_code_image import *
+from Utils.redis_connect import redis_database
 
 bp = Blueprint("user", __name__, url_prefix='/net-web')
 

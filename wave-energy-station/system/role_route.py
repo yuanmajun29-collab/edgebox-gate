@@ -1,7 +1,7 @@
 from flask import Blueprint
-from utils.db import ToMongo
-from utils.Utils import generate_log
-from utils.jwt_verify import *
+from Utils.db import ToMongo
+from Utils.Utils import generate_log
+from Utils.jwt_verify import *
 import uuid
 
 bp = Blueprint("role", __name__, url_prefix='/net-web')

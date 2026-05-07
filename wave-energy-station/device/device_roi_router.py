@@ -1,8 +1,8 @@
 from flask import Blueprint, jsonify, request
-from utils.db import ToMongo
+from Utils.db import ToMongo
 import uuid
 import json
-from utils.jwt_verify import *
+from Utils.jwt_verify import *
 
 bp = Blueprint('device_roiapi', __name__, url_prefix='/net-web')
 
@@ -65,7 +65,7 @@ def addRoiArea():
 
     result = my_db.insert("odin_device_roi_area_record", res_item)
 
-    from alg.AlgorithServer_v2 import SenderThread
+    from algorith_server.AlgorithServer_v2 import SenderThread
     sender = SenderThread(current_app.app_context())
     sender.send_3007_message()
 
@@ -91,7 +91,7 @@ def deleteRoi():
 
     res = my_db.delete("odin_device_roi_area_record", {"camera_id": camera_id, "roi_id": roi_id})
 
-    from alg.AlgorithServer_v2 import SenderThread
+    from algorith_server.AlgorithServer_v2 import SenderThread
     sender = SenderThread(current_app.app_context())
     sender.send_3007_message()
 
@@ -148,7 +148,7 @@ def modifyRoiStatus():
     newItem = {"roi_status": roiStatus}
     res = my_db.update("odin_device_roi_area_record", query, {"$set": newItem})
 
-    from alg.AlgorithServer_v2 import SenderThread
+    from algorith_server.AlgorithServer_v2 import SenderThread
     sender = SenderThread(current_app.app_context())
     sender.send_3007_message()
 
@@ -231,7 +231,7 @@ def addRoi():
 
     my_db.insert("odin_device_roi_area_record", res_item)
 
-    from alg.AlgorithServer_v2 import SenderThread
+    from algorith_server.AlgorithServer_v2 import SenderThread
     sender = SenderThread(current_app.app_context())
     sender.send_3007_message()
     

@@ -1,6 +1,6 @@
 from flask import Blueprint
-from utils.jwt_verify import *
-from utils.Utils import *
+from Utils.jwt_verify import *
+from Utils.Utils import *
 import uuid
 import json
 from .system_misc import *
@@ -8,7 +8,7 @@ import os
 from system.system_misc import Cleandisk
 from system.system_sync import deleteAllData
 from config import SYSTEM_CFG_URL
-from alg.redis_connect import redis_database
+from algorith_server.redis_connect import redis_database
 import hashlib
 
 init_clear_box = Cleandisk()
@@ -317,7 +317,7 @@ def uploadData():
     insert_sms_info(my_db, smsDeliveryEntity)
     insert_webhook_info(my_db, webhookDeliveryEntity)
 
-    from alg.AlgorithServer_v2 import SenderThread
+    from algorith_server.AlgorithServer_v2 import SenderThread
     sender = SenderThread(context=[])
     sender.send_reboot_message()
 

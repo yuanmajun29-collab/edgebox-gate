@@ -1,7 +1,7 @@
 import os
 from flask.views import MethodView
 from flask import request, send_file
-from utils.device_misc import response_no_image
+from Utils.device_misc import response_no_image
 from config import EMERGENCY_IMG_PATH
 
 

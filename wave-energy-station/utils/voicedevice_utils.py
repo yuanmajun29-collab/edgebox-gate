@@ -4,8 +4,8 @@ import uuid
 import time
 from datetime import datetime
 import logger as logger
-from utils.db import ToMongo
-from utils.CheckdeviceStatus import CheckDeviceStatus
+from Utils.db import ToMongo
+from Utils.CheckdeviceStatus import CheckDeviceStatus
 from threading import Timer, Thread
 
 mainlogger = logger.getLogger('main')

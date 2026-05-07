@@ -1,10 +1,10 @@
 import json
 
-from alg.AgreementBuilder import pack_init_agreement,pack_3004_agreement
-from utils.db import ToMongo
-from alg.Algorithmutil import constant_to_str
+from algorith_server.AgreementBuilder import pack_init_agreement,pack_3004_agreement
+from Utils.db import ToMongo
+from algorith_server.Algorithmutil import constant_to_str
 from personnel.personnel_route import FaceFeatureDBAPI
-import utils.logger as logger
+import Utils.logger as logger
 
 mainlogger = logger.getLogger('main')
 

@@ -2,12 +2,12 @@ import socket
 import threading
 import time
 import struct
-from utils.db import ToMongo
-from alg.redis_connect import redis_database
+from Utils.db import ToMongo
+from algorith_server.redis_connect import redis_database
 import traceback
-import utils.logger as logger
+import Utils.logger as logger
 from device.KNDservice import insert_to_database, sync_device_status, sync_emergency, sync_temperature
-from utils.CheckdeviceStatus import CheckDeviceStatus
+from Utils.CheckdeviceStatus import CheckDeviceStatus
 
 mainlogger = logger.getLogger('main')
 

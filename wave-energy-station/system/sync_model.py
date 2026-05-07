@@ -5,10 +5,10 @@ from datetime import datetime
 from threading import Thread
 from .system_misc import dt2str,database_to_dict,get_base_info
 from .system_sync import register_device,query_edge_service
-import utils.logger as logger
-import utils.glv as glv
-from utils.db import ToMongo
-from utils.datacfg import *
+import Utils.logger as logger
+import Utils.glv as glv
+from Utils.db import ToMongo
+from Utils.datacfg import *
 from config import NetAgreementType,BASE_INFO
 
 HEART_BEAT ="/business/sync/heartBeat"

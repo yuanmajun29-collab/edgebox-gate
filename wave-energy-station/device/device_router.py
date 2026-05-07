@@ -1,11 +1,11 @@
 from flask import Blueprint, Flask
-from utils.db import *
+from Utils.db import *
 import cv2
 from threading import Thread
-from utils.CheckdeviceStatus import CheckInService
-from utils.Utils import *
-from utils.jwt_verify import *
-from utils.datacfg import positionkeys_database, positionkeys_web, area_db, area_web, camerakeys_database, \
+from Utils.CheckdeviceStatus import CheckInService
+from Utils.Utils import *
+from Utils.jwt_verify import *
+from Utils.datacfg import positionkeys_database, positionkeys_web, area_db, area_web, camerakeys_database, \
     camerakeys_web
 from system.sync_model import *
 
@@ -413,7 +413,7 @@ def updateCameraEdit():
     sync_camera_thread.start()
 
     if origin_url != res['main_url']:
-        from alg.AlgorithServer_v2 import SenderThread
+        from algorith_server.AlgorithServer_v2 import SenderThread
         sender = SenderThread(current_app.app_context())
         sender.send_3007_message()
 
@@ -559,7 +559,7 @@ def saveCameraEdit():
     sync_camera_thread = Thread(target=sync_camera,args=[my_db,a])
     sync_camera_thread.start()
 
-    from alg.AlgorithServer_v2 import SenderThread
+    from algorith_server.AlgorithServer_v2 import SenderThread
     sender = SenderThread(current_app.app_context())
     sender.send_3007_message()
 
@@ -602,7 +602,7 @@ def deleteCameraEdit():
     delete_thread = Thread(target=sync_deleteDev,args=[camera_id,'5'])
     delete_thread.start()
 
-    from alg.AlgorithServer_v2 import SenderThread
+    from algorith_server.AlgorithServer_v2 import SenderThread
     sender = SenderThread(current_app.app_context())
     sender.send_3007_message()
 

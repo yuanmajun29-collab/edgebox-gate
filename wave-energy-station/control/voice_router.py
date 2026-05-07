@@ -1,12 +1,12 @@
 import uuid
 from flask import Blueprint
-from utils.jwt_verify import *
-from utils.db import ToMongo
-from utils.Utils import set_fail_result, set_success_result
-from utils.voicedevice_utils import VoiceBoxUtils, LingsSound, CheckSoundStatus
-from utils.datacfg import sound_database, sound_web
+from Utils.jwt_verify import *
+from Utils.db import ToMongo
+from Utils.Utils import set_fail_result, set_success_result
+from Utils.voicedevice_utils import VoiceBoxUtils, LingsSound, CheckSoundStatus
+from Utils.datacfg import sound_database, sound_web
 from system.system_misc import database_to_dict
-import utils.logger as logger
+import Utils.logger as logger
 
 bp = Blueprint("sound", __name__, url_prefix='/net-web')
 

@@ -1,7 +1,7 @@
 from flask import Blueprint
-from utils.jwt_verify import *
-from utils.datacfg import *
-from utils.Utils import set_fail_result, set_success_result
+from Utils.jwt_verify import *
+from Utils.datacfg import *
+from Utils.Utils import set_fail_result, set_success_result
 from system.system_misc import database_to_dict,database_to_dict3
 from emergency.advise_router import decode_token
 from .Tempservice import *

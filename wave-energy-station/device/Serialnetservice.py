@@ -4,10 +4,10 @@ import json
 from datetime import datetime
 from threading import Thread,Timer
 
-from utils.db import ToMongo
-import utils.logger as logger
-from alg.redis_connect import redis_database
-from utils.aliyun_voice_phone import send_voice_phone
+from Utils.db import ToMongo
+import Utils.logger as logger
+from algorith_server.redis_connect import redis_database
+from Utils.aliyun_voice_phone import send_voice_phone
 from system.sync_model import sync_dynamic_emergency,sync_dev_status
 
 

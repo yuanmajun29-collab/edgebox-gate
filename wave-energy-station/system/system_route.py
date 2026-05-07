@@ -2,15 +2,15 @@ from datetime import datetime
 from flask import Blueprint,request, jsonify, current_app,send_file
 import uuid
 from threading import Thread
-from utils.db import ToMongo
-from utils.jwt_verify import *
-from utils.Utils import set_success_result,set_fail_result
+from Utils.db import ToMongo
+from Utils.jwt_verify import *
+from Utils.Utils import set_success_result,set_fail_result
 from .system_misc import *
 from .system_sync import *
 from .sync_model import SyncTimer,init_box_model,init_param,check_service_addr
 from config import SYSTEMLOGO_URL
-from utils.device_misc import make_response_image_jpeg
-import utils.glv as glv
+from Utils.device_misc import make_response_image_jpeg
+import Utils.glv as glv
 from emergency.db_router import transfer_img_url
 import traceback
 from msg_queue import *

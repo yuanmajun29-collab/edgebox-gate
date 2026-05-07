@@ -1,10 +1,10 @@
 from flask import Blueprint
-from utils.db import ToMongo
+from Utils.db import ToMongo
 import uuid
-from utils.Utils import set_success_result,get_user_item
-from utils.jwt_verify import *
-import utils.logger as logger
-from alg.Alibabasms import SendSmsResqueset
+from Utils.Utils import set_success_result,get_user_item
+from Utils.jwt_verify import *
+import Utils.logger as logger
+from algorith_server.Alibabasms import SendSmsResqueset
 import requests
 import json
 from msg_queue import smsdelivery_queue, webdelivery_queue

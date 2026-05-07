@@ -2,10 +2,10 @@ import uuid
 
 from flask import Blueprint, request, jsonify, json
 
-from utils.Utils import set_fail_result, set_success_result
-from utils.db import ToMongo
-from utils.Utils import *
-from utils.datacfg import area_db,area_web
+from Utils.Utils import set_fail_result, set_success_result
+from Utils.db import ToMongo
+from Utils.Utils import *
+from Utils.datacfg import area_db,area_web
 
 bp = Blueprint("area", __name__, url_prefix='/net-web')
 

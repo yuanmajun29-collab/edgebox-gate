@@ -6,7 +6,7 @@ from control import control_bp, algorithm_bp, control_emergency_bp
 from emergency import emergency_bp, advise_bp
 from system import log_bp, user_bp, system_bp, role_bp
 from home import home_bp
-from alg.AlgorithServer_v2 import AlgorithServer
+from algorith_server.AlgorithServer_v2 import AlgorithServer
 
 from device.Serialnetservice import SerialNetServer
 

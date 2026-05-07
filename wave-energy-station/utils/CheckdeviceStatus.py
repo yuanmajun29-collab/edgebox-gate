@@ -1,9 +1,9 @@
 import os
 import time
 from datetime import datetime
-from utils.db import ToMongo
+from Utils.db import ToMongo
 from threading import Thread
-from utils.advise_func import insert_camera_advise
+from Utils.advise_func import insert_camera_advise
 
 
 def CheckDeviceStatus(ip):

@@ -1,5 +1,5 @@
 import re
-import utils.logger as logger
+import Utils.logger as logger
 
 mainlogger = logger.getLogger('main')
 

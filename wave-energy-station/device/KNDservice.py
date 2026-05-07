@@ -1,8 +1,8 @@
 import socket
-from alg.redis_connect import redis_database
-from utils.voicedevice_utils import *
+from algorith_server.redis_connect import redis_database
+from Utils.voicedevice_utils import *
 import threading
-from utils.CheckdeviceStatus import CheckDeviceStatus
+from Utils.CheckdeviceStatus import CheckDeviceStatus
 import traceback
 
 mainlogger = logger.getLogger('main')

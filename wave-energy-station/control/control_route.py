@@ -1,14 +1,14 @@
 from flask import Blueprint,request, jsonify,current_app,send_file
 
 import io,zipfile,xlwt
-from utils.opencv_utils import draw_frame
+from Utils.opencv_utils import draw_frame
 
-from utils.db import *
-from utils.jwt_verify import *
-from utils.Utils import *
-from utils.datacfg import *
+from Utils.db import *
+from Utils.jwt_verify import *
+from Utils.Utils import *
+from Utils.datacfg import *
 from config import MODEL_DICT,EMERGENCY_IMG_PATH
-import utils.logger as logger
+import Utils.logger as logger
 
 bp = Blueprint("control", __name__, url_prefix='/net-web')
 
@@ -289,7 +289,7 @@ def addControlTask():
             my_db.insert("control_device_algorithm_associate", newItem)
 
     #发送算法重启指令
-    from alg.AlgorithServer_v2 import SenderThread
+    from algorith_server.AlgorithServer_v2 import SenderThread
     sender = SenderThread( current_app.app_context() )
     sender.send_reboot_message()
 
@@ -355,7 +355,7 @@ def modifyControlTask():
             my_db.insert("control_device_algorithm_associate", newItem)
 
     #发送算法重启指令
-    from alg.AlgorithServer_v2 import SenderThread
+    from algorith_server.AlgorithServer_v2 import SenderThread
     sender = SenderThread( current_app.app_context() )
     sender.send_reboot_message()
 
@@ -378,7 +378,7 @@ def deleteControlTask():
     my_db.delete('control_device_algorithm_associate', query, is_one=False)
 
     #发送算法重启指令
-    from alg.AlgorithServer_v2 import SenderThread
+    from algorith_server.AlgorithServer_v2 import SenderThread
     sender = SenderThread( current_app.app_context() )
     sender.send_reboot_message()
     
@@ -404,7 +404,7 @@ def modifyControlTaskIsActive():
         my_db.update('control_manage_mission', {"control_id": controlID}, {'$set': {'mission_status': switchOperation}})
 
     #发送算法重启指令
-    from alg.AlgorithServer_v2 import SenderThread
+    from algorith_server.AlgorithServer_v2 import SenderThread
     sender = SenderThread( current_app.app_context() )
     sender.send_reboot_message()
 

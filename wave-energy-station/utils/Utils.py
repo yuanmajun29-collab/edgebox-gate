@@ -3,7 +3,7 @@ from datetime import datetime
 
 import jwt
 
-from utils.logcfg import log_map
+from Utils.logcfg import log_map
 
 key = "zkpfw*%$qjrfono@sdko34@%"
 

@@ -12,7 +12,7 @@ from alibabacloud_dyvmsapi20170525 import models as dyvmsapi_20170525_models
 from alibabacloud_tea_util import models as util_models
 from alibabacloud_tea_util.client import Client as UtilClient
 
-from utils import logger
+import Utils.logger as logger
 
 devicelogger = logger.getLogger('dynamic')
 

@@ -1,6 +1,6 @@
 import os
 from flask.views import MethodView
-from utils.device_misc import make_response_image_jpeg, response_no_image
+from Utils.device_misc import make_response_image_jpeg, response_no_image
 from config import FACE_IDENT_URL, PERSON_IMG_URL
 import time, datetime
 

@@ -4,12 +4,12 @@ import time
 from datetime import datetime
 from threading import Thread, Timer
 
-from utils.aliyun_voice_phone import send_voice_phone
-from utils.db import ToMongo
-from alg.redis_connect import redis_database
-import utils.logger as logger
+from Utils.aliyun_voice_phone import send_voice_phone
+from Utils.db import ToMongo
+from algorith_server.redis_connect import redis_database
+import Utils.logger as logger
 from msg_queue import audio_queue
-from alg.Alibabasms import SendSmsResqueset
+from algorith_server.Alibabasms import SendSmsResqueset
 
 devicelogger = logger.getLogger('dynamic')
 
