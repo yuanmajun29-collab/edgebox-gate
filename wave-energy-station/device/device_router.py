@@ -118,8 +118,7 @@ def pageQueryCameraEdit():
         camera_coll = my_db.get_col('odin_device_camera_edit')
         associate_coll = my_db.get_col('odin_device_device_position_associate')
         position_coll = my_db.get_col('odin_device_position')
-        # control_associate_coll = my_db.get_col('work_flow_mission_device_associate')
-        # control_manage_coll = my_db.get_col('odin_business_control_manage')
+        # legacy: work_flow_mission_device_associate / odin 汇总表；布控以 control_manage_mission 为准
         mission_col = my_db.get_col(CONTROL_MANAGE_MISSION)
         asso_col = my_db.get_col(CONTROL_DEVICE_ALGORITHM_ASSOCIATE)
 
