@@ -561,14 +561,6 @@ def handle_msg(msg_body, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSmsR
                                                      args=[mqtt_client, info_list, data1, data2, organization_id])
                         publish_mqtt_thread.start()
 
-                    if smsconfig_repull():
-                        mainlogger.debug("---重新拉取短信sms配置---")
-                        sms.get_sms_config()
-
-                    if sms_repull():
-                        mainlogger.debug("---重新拉取短信投递任务---")
-                        sms.get_sms_delivery()
-
                     sms_msg = {"controlName": control_name,
                                "modelName": model_path,
                                "modelPath": model_path,
@@ -583,14 +575,8 @@ def handle_msg(msg_body, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSmsR
                                'emergencyId': emergency_record_id,
                                'positionId': position_id,
                                }
-                    params_dict = {'organization_id': organization_id,
-                                   'emergency_record_id': emergency_record_id}
-                    sms.send_sms_thread(sms_msg, params_dict)
-
-                    if webhook_repull():
-                        mainlogger.debug("---重新拉取告警转发任务---")
-                        webhook.get_webhook_delivery()
-                    webhook.send_webhook_thread(sms_msg, params_dict)
+                    deliver_emergency_notifications(sms, webhook, sms_msg, organization_id,
+                                                    emergency_record_id)
 
         mainlogger.debug('--alarm_type: ' + str(alarm_algs))
         return
@@ -747,6 +733,23 @@ def webhook_repull():
             return True
         elif num == 0:
             return False
+
+
+def deliver_emergency_notifications(sms: SendSmsResqueset, webhook: Sendwebrequest, sms_msg: dict,
+                                    organization_id, emergency_record_id):
+    """按需刷新短信与 webhook 配置/任务队列后下发通知。"""
+    if smsconfig_repull():
+        mainlogger.debug("---重新拉取短信sms配置---")
+        sms.get_sms_config()
+    if sms_repull():
+        mainlogger.debug("---重新拉取短信投递任务---")
+        sms.get_sms_delivery()
+    params_dict = {'organization_id': organization_id, 'emergency_record_id': emergency_record_id}
+    sms.send_sms_thread(sms_msg, params_dict)
+    if webhook_repull():
+        mainlogger.debug("---重新拉取告警转发任务---")
+        webhook.get_webhook_delivery()
+    webhook.send_webhook_thread(sms_msg, params_dict)
 
 
 def filter_emergency(device_id, mission_id, algorithm_constant_num, re_pool: redis.Redis, emergencyIntervalTime=3):
@@ -1405,14 +1408,6 @@ def handle_hikhotcam(req, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSms
                                                  args=[mqtt_client, None, data1, data2, organization_id])
                     publish_mqtt_thread.start()
 
-                if smsconfig_repull():
-                    mainlogger.debug("---重新拉取短信sms配置---")
-                    sms.get_sms_config()
-
-                if sms_repull():
-                    mainlogger.debug("---重新拉取短信投递任务---")
-                    sms.get_sms_delivery()
-
                 sms_msg = {"controlName": control_name,
                            "modelName": model_path,
                            "modelPath": model_path,
@@ -1427,14 +1422,8 @@ def handle_hikhotcam(req, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSms
                            'emergencyId': emergency_record_id,
                            'positionId': position_id,
                            }
-                params_dict = {'organization_id': organization_id,
-                               'emergency_record_id': emergency_record_id}
-                sms.send_sms_thread(sms_msg, params_dict)
-
-                if webhook_repull():
-                    mainlogger.debug("---重新拉取告警转发任务---")
-                    webhook.get_webhook_delivery()
-                webhook.send_webhook_thread(sms_msg, params_dict)
+                deliver_emergency_notifications(sms, webhook, sms_msg, organization_id,
+                                                emergency_record_id)
 
     except Exception as e:
         import traceback
