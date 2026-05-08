@@ -1,6 +1,6 @@
-from flask import Flask
 import Utils.edgebox_repo  # noqa: F401 — monorepo 根路径，供 edgebox.db / edgebox.config
-import config
+
+from edgebox.shared.flask_bootstrap import create_configured_app
 from emergency import homepage_bp
 from device import area_bp, position_bp, device_bp, device_roibp, dynamic_bp
 from control import control_bp, algorithm_bp, control_emergency_bp
@@ -11,11 +11,10 @@ from algorith_server.AlgorithServer_v2 import AlgorithServer
 
 from device.Serialnetservice import SerialNetServer
 
+
 class WaveEnergyStationApp():
     def __init__(self):
-        self.app = Flask(__name__)
-        # 读取配置
-        self.app.config.from_object(config)
+        self.app = create_configured_app()
 
         self.app.register_blueprint(user_bp)
         self.app.register_blueprint(area_bp)
@@ -41,7 +40,6 @@ class WaveEnergyStationApp():
         self.context = self.app.app_context()
         self.algorithServer = AlgorithServer(self.context)
 
-        #初始化串口服务
         self.Serialservice = SerialNetServer(context=None)
 
     def run(self):

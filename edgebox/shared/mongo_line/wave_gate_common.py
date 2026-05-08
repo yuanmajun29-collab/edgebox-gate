@@ -1,19 +1,15 @@
 """
-Mongo / ai_spirit 共用：Flask 与 Blueprint 注册（顺序与原先 ``WaveGateMongo.py`` 一致）。
+Mongo / ai_spirit 共用：Blueprint 注册（顺序与原先 ``WaveGateMongo.py`` 一致）。
+
+Flask 实例请使用 ``edgebox.shared.flask_bootstrap.create_configured_app``；本模块再导出该函数以兼容现有 import。
 
 需在已将具体产品目录置于 ``sys.path`` 首位后再调用。
 """
 from __future__ import annotations
 
-from flask import Flask
+from edgebox.shared.flask_bootstrap import create_configured_app
 
-
-def create_configured_app() -> Flask:
-    import config
-
-    app = Flask(__name__)
-    app.config.from_object(config)
-    return app
+__all__ = ["create_configured_app", "register_wave_gate_blueprints"]
 
 
 def register_wave_gate_blueprints(app, *, full_mongo: bool = False) -> None:
