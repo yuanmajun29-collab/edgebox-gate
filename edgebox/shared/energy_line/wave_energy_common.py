@@ -11,22 +11,23 @@ __all__ = ["register_energy_blueprints"]
 def register_energy_blueprints(app) -> None:
     from emergency import homepage_bp
     from device import area_bp, position_bp
-    from control import control_bp, algorithm_bp, control_emergency_bp
-    from system import log_bp, user_bp, system_bp, role_bp
+    from control import control_emergency_bp
+    from system import user_bp, system_bp
     from home import home_bp
 
     from edgebox.shared.wave_blueprint_segments import (
+        register_control_algorithm_pair,
         register_device_bp_roibp_pair,
         register_dynamic_bp,
         register_emergency_advise_pair,
+        register_role_log_pair,
     )
 
     app.register_blueprint(user_bp)
     app.register_blueprint(area_bp)
     app.register_blueprint(position_bp)
     app.register_blueprint(homepage_bp)
-    app.register_blueprint(control_bp)
-    app.register_blueprint(algorithm_bp)
+    register_control_algorithm_pair(app)
 
     app.register_blueprint(home_bp)
 
@@ -36,6 +37,5 @@ def register_energy_blueprints(app) -> None:
     register_emergency_advise_pair(app)
 
     app.register_blueprint(system_bp)
-    app.register_blueprint(role_bp)
-    app.register_blueprint(log_bp)
+    register_role_log_pair(app)
     app.register_blueprint(control_emergency_bp)

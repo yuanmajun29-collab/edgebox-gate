@@ -10,6 +10,9 @@ __all__ = [
     "register_device_bp_roibp_pair",
     "register_dynamic_bp",
     "register_device_roibp_dynamic_pair",
+    "register_role_log_pair",
+    "register_control_constant_voice_triple",
+    "register_control_algorithm_pair",
 ]
 
 
@@ -39,3 +42,27 @@ def register_device_roibp_dynamic_pair(app) -> None:
 
     app.register_blueprint(device_roibp)
     app.register_blueprint(dynamic_bp)
+
+
+def register_role_log_pair(app) -> None:
+    from system import role_bp, log_bp
+
+    app.register_blueprint(role_bp)
+    app.register_blueprint(log_bp)
+
+
+def register_control_constant_voice_triple(app) -> None:
+    """Mongo / ai_spirit：``control_bp`` → ``constant_bp`` → ``voice_bp``。"""
+    from control import control_bp, constant_bp, voice_bp
+
+    app.register_blueprint(control_bp)
+    app.register_blueprint(constant_bp)
+    app.register_blueprint(voice_bp)
+
+
+def register_control_algorithm_pair(app) -> None:
+    """Energy：``control_bp`` → ``algorithm_bp``。"""
+    from control import control_bp, algorithm_bp
+
+    app.register_blueprint(control_bp)
+    app.register_blueprint(algorithm_bp)
