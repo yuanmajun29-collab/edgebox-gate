@@ -17,29 +17,32 @@ def register_wave_gate_blueprints(app, *, full_mongo: bool = False) -> None:
     :param full_mongo: 为 True 时注册 ``flow_bp``、``dynamic_bp``（仅 ``apps/mongo``）。
     """
     from home import home_bp
-    from device import device_bp, device_roibp, position_bp
+    from device import device_bp, position_bp
     from personnel import personnel_bp
     from control import control_bp, constant_bp, voice_bp
     from system import log_bp, user_bp, system_bp, role_bp
-    from emergency import emergency_bp, advise_bp
     from thirdpaty import third_bp
+
+    from edgebox.shared.wave_blueprint_segments import (
+        register_device_bp_roibp_pair,
+        register_device_roibp_dynamic_pair,
+        register_emergency_advise_pair,
+    )
 
     app.register_blueprint(home_bp)
     app.register_blueprint(system_bp)
     app.register_blueprint(user_bp)
     app.register_blueprint(role_bp)
     app.register_blueprint(log_bp)
-    app.register_blueprint(emergency_bp)
-    app.register_blueprint(advise_bp)
-    app.register_blueprint(device_bp)
+    register_emergency_advise_pair(app)
     if full_mongo:
-        from device import dynamic_bp
         from personnel import flow_bp
 
+        app.register_blueprint(device_bp)
         app.register_blueprint(flow_bp)
-    app.register_blueprint(device_roibp)
-    if full_mongo:
-        app.register_blueprint(dynamic_bp)
+        register_device_roibp_dynamic_pair(app)
+    else:
+        register_device_bp_roibp_pair(app)
     app.register_blueprint(position_bp)
     app.register_blueprint(personnel_bp)
     app.register_blueprint(control_bp)
