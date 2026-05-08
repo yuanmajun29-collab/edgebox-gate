@@ -1,15 +1,15 @@
 #!/bin/bash
 if [ $1 == start ];then
 
-    PYTHON_PID=$(ps -ef | grep wave-energy | grep -v grep | wc -l)
+    PYTHON_PID=$(ps -ef | grep 'products/energy/app.py' | grep -v grep | wc -l)
     if [ $PYTHON_PID -le 0 ];then
         echo "python后台服务启动中......."
-        nohup python3 -u ./wave-energy-station/app.py > ./nohup.out  2>&1 &    
+        nohup python3 -u ./products/energy/app.py > ./nohup.out  2>&1 &    
         echo "--python后台服务启动成功"    
     fi
     
 elif [ $1 == stop ];then
-    exe_id=`ps -ef|grep  'wave-energy'|grep -v grep|awk '{print $2}'|uniq`
+    exe_id=`ps -ef|grep  'products/energy/app.py'|grep -v grep|awk '{print $2}'|uniq`
     for pid in ${exe_id[*]}
     do
         kill -9 $pid
@@ -17,18 +17,18 @@ elif [ $1 == stop ];then
     done
 
 elif [ $1 == restart ];then
-    exe_id=`ps -ef|grep  'wave-energy'|grep -v grep|awk '{print $2}'|uniq`
+    exe_id=`ps -ef|grep  'products/energy/app.py'|grep -v grep|awk '{print $2}'|uniq`
     for pid in ${exe_id[*]}
     do
         kill -9 $pid
         echo "1、python后台关闭成功"
     done
-    nohup python3 -u ./wave-energy-station/app.py > ./nohup.out  2>&1 &    
+    nohup python3 -u ./products/energy/app.py > ./nohup.out  2>&1 &    
     echo "2、python后台重新启动成功" 
 
 elif [ $1 == status ];then
     normal_num=0
-    exe_id=`ps -ef|grep  'wave-energy-station'|grep -v grep|awk '{print $2}'|uniq`
+    exe_id=`ps -ef|grep  'products/energy/app.py'|grep -v grep|awk '{print $2}'|uniq`
     for pid in ${exe_id[*]}
     do
         tmp=`ps $pid|grep python3|wc -l`

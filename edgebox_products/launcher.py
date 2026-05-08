@@ -14,11 +14,11 @@ _repo_s = str(REPO_ROOT)
 if _repo_s not in sys.path:
     sys.path.insert(0, _repo_s)
 
-# profile 键 → 产品根目录名（相对 REPO_ROOT）
+# profile 键 → 产品根目录（相对 REPO_ROOT，统一在 products/ 下）
 PRODUCT_ROOT: Dict[str, str] = {
-    "mongo": "WaveGateMongo",
-    "ai_spirit": "wave-ai-spirit",
-    "energy": "wave-energy-station",
+    "mongo": "products/mongo",
+    "ai_spirit": "products/ai_spirit",
+    "energy": "products/energy",
 }
 
 # profile → (Python 模块名, 应用类名)
@@ -98,7 +98,7 @@ def main(argv=None) -> int:
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="edgebox-gate 统一启动：选择 wave-ai-spirit / wave-energy-station / WaveGateMongo",
+        description="edgebox-gate 统一启动：选择 products/mongo | products/ai_spirit | products/energy",
     )
     parser.add_argument(
         "profile",
