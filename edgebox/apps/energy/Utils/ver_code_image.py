@@ -1,4 +1,5 @@
 import base64
+import os
 
 import cv2
 import numpy as np
@@ -18,7 +19,8 @@ def generate_verification_code():
     image = Image.new('RGB', (image_width, image_height), color=(255, 255, 255))
 
     draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype("./utils/fonts/arial.ttf", size=font_size)
+    _font_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts", "arial.ttf")
+    font = ImageFont.truetype(_font_path, size=font_size)
 
     # font = ImageFont.truetype("./fonts/arial.ttf", size=font_size)
 

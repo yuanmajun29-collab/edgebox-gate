@@ -1,4 +1,1 @@
-"""Canonical utilities package (energy-station), matching WaveGateMongo / wave-ai-spirit naming.
-
-Legacy import path `utils.*` remains as thin re-exports for compatibility.
-"""
+"""Energy 产品线工具包（与 mongo / ai_spirit 的 ``Utils`` 命名一致）。"""

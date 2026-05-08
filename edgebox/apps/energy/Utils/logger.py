@@ -4,10 +4,8 @@ import yaml
 import logging.config
 import os
 
-import sys
-sys.path.append("/data/ebox/wavegate/wave-energy-station/utils")
+import Utils.glv as glv
 
-import glv
 glv.init()
 
 initLock = threading.Lock()
@@ -18,7 +16,7 @@ log_format = "%(asctime)s %(process)d-%(thread)d %(name)s [%(levelname)s] %(mess
 level = logging.DEBUG
 console_log = True
 
-def setup_logging(default_path='/data/ebox/wavegate/wave-energy-station/utils/logging.yaml', default_level=logging.INFO):
+def setup_logging(default_path='/data/ebox/wavegate/wave-energy-station/Utils/logging.yaml', default_level=logging.INFO):
     path = default_path
     if os.path.exists(path):
         with open(path, 'rt') as f:
@@ -33,13 +31,13 @@ def init_handler(handler):
 
 
 def init_logger(logger):
-    setup_logging("/data/ebox/wavegate/wave-energy-station/utils/logging.yaml")
+    setup_logging("/data/ebox/wavegate/wave-energy-station/Utils/logging.yaml")
 
 def initialize():
     global rootLoggerInitialized
     with initLock:
         if not rootLoggerInitialized:
-            filetime = os.path.getmtime("/data/ebox/wavegate/wave-energy-station/utils/logging.yaml")
+            filetime = os.path.getmtime("/data/ebox/wavegate/wave-energy-station/Utils/logging.yaml")
             init_logger(logging.getLogger())
             rootLoggerInitialized = True
 
