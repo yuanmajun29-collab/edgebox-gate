@@ -1,4 +1,4 @@
 """
-edgebox-gate 单体仓库根包：共享层 ``edgebox.config`` / ``edgebox.db`` 与
-可部署产品 ``edgebox.apps.<mongo|ai_spirit|energy>``（见目录 ``edgebox/apps/``）。
+edgebox-gate 单体仓库根包：共享默认配置 ``edgebox.config``、库表常量与查询 ``edgebox.db``、
+与业务解耦的可复用代码 ``edgebox.shared``，以及可部署产品目录 ``edgebox.apps``。
 """

@@ -1,3 +1,1 @@
-import redis
-
-redis_database = redis.Redis(host='localhost', port=6379,password="waveRedisAdmin123")
+from edgebox.shared.algorith_server.redis_connect import *  # noqa: F401,F403
