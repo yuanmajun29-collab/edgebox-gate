@@ -25,6 +25,7 @@ from msg_queue import vehicle_pedestrian_events_queue
 from config import MESSAGE_CAMERA_VEHICLES, MESSAGE_CAMERA_PEDESTRIAN
 
 import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.workflow_mission_queries import workflow_mission_collection
 from edgebox_db.mongo_collections import (
     WORK_FLOW_ALGORITHM_CONSTANT,
     WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,
@@ -211,7 +212,7 @@ def _fetch_handle_msg_db_context(my_db: ToMongo, msg_body: dict):
     work_model_col = my_db.get_col('authority_work_model')
     mission_associate_col = my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
     alg_col = my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)
-    mission_col = my_db.get_col(WORK_FLOW_MISSION)
+    mission_col = workflow_mission_collection(my_db)
     emergency_col = my_db.get_col('odin_business_emergency_record')
     emergency_detail_col = my_db.get_col('odin_business_emergency_record_detail_info')
     alg_constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
@@ -1252,7 +1253,7 @@ def handle_hikhotcam(req, mongo: ToMongo, mqtt_client: mqtt.Client, sms: SendSms
 
         mission_associate_col = my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
         alg_col = my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)
-        mission_col = my_db.get_col(WORK_FLOW_MISSION)
+        mission_col = workflow_mission_collection(my_db)
 
         mission_id_list = find_associate_mission3(device_id, '105', alg_col, mission_col, mission_associate_col)
         if not mission_id_list:

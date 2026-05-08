@@ -10,9 +10,7 @@ from system.sys_config import advise_database,advise_web
 from Utils.jwt_verify import *
 
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.mongo_collections import (
-    WORK_FLOW_MISSION,
-)
+from edgebox_db.workflow_mission_queries import workflow_mission_collection
 
 bp = Blueprint("home",__name__, url_prefix='/net-web')
 @bp.route('/control/getMisstionCount', methods=['GET','POST'])
@@ -22,7 +20,7 @@ def getMisstionCount():
     接口说明：获取任务统计
     '''
     my_db = ToMongo('wavedevice')
-    mission_coll = my_db.get_col(WORK_FLOW_MISSION)
+    mission_coll = workflow_mission_collection(my_db)
     missionTotal = mission_coll.find().count()
     missonActiveSize = mission_coll.find({'mission_status':0}).count()
 

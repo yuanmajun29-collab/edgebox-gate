@@ -6,6 +6,7 @@ from algorith_server.Algorithmutil import constant_to_str
 from personnel.personnel_route import FaceFeatureDBAPI
 
 import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.workflow_mission_queries import workflow_mission_collection
 from edgebox_db.mongo_collections import (
     WORK_FLOW_ALGORITHM_CONSTANT,
     WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,
@@ -70,7 +71,7 @@ class ControlSqlHelperv2():
  
     def build_controls_message(self):
 
-        controlMissons  = self.my_db.get_col(WORK_FLOW_MISSION).find({'mission_status':0})
+        controlMissons  = workflow_mission_collection(self.my_db).find({'mission_status':0})
         DeviceAssociate = self.my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
         camera_coll = self.my_db.get_col('odin_device_camera_edit')
         algorithm_coll = self.my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)
@@ -172,7 +173,7 @@ class ControlSqlHelperv2():
     
     def build_controls_message_singlemode(self):
         Facefature = FaceFeatureDBAPI()
-        controlMissons  = self.my_db.get_col(WORK_FLOW_MISSION).find({'mission_status':0})
+        controlMissons  = workflow_mission_collection(self.my_db).find({'mission_status':0})
         DeviceAssociate = self.my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
         camera_coll = self.my_db.get_col('odin_device_camera_edit')
         algorithm_coll = self.my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)

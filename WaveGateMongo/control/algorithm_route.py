@@ -9,10 +9,10 @@ from system.system_misc import database_to_dict
 from system.sys_config import constant_database,constant_web
 
 import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.workflow_mission_queries import workflow_mission_collection
 from edgebox_db.mongo_collections import (
     WORK_FLOW_ALGORITHM_CONSTANT,
     WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,
-    WORK_FLOW_MISSION,
     WORK_FLOW_MISSION_DEVICE_ASSOCIATE,
 )
 
@@ -65,7 +65,7 @@ def updateAlgorithm():
 
     if rate_num:
         constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)    
-        mission_col = my_db.get_col(WORK_FLOW_MISSION)  
+        mission_col = workflow_mission_collection(my_db)  
         origin_item = constant_col.find_one(query)
         rateNum_ori = origin_item['rate_num']
         constant_num = origin_item['algorithm_constant_num']

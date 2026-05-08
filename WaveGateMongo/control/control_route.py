@@ -14,6 +14,7 @@ from Utils.voicedevice_utils import VoiceBoxUtils,LingsSound
 from algorith_server.Agreementunpack import *
 
 import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.workflow_mission_queries import workflow_mission_collection, find_workflow_mission_by_mission_id
 from edgebox_db.mongo_collections import (
     WORK_FLOW_ALGORITHM_CONSTANT,
     WORK_FLOW_INSIGHT_MODEL,
@@ -57,7 +58,7 @@ def find_asso_alg(constant_col,instance_col,algNname):
 def getControlItemList():
     responses={}
     my_db = ToMongo("wavedevice")
-    mission_coll = my_db.get_col(WORK_FLOW_MISSION).find()
+    mission_coll = workflow_mission_collection(my_db).find()
     mission_model_associate = my_db.get_col(WORK_FLOW_MISSION_MODEL_ASSOCIATE)
     algorithm_coll = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)
     model_coll = my_db.get_col(WORK_FLOW_INSIGHT_MODEL)
@@ -114,7 +115,7 @@ def queryControlTaskInfo():
     my_db = ToMongo('wavedevice')
     device_associate_coll = my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
     control_manage_coll = my_db.get_col("odin_business_control_manage")
-    mission_coll = my_db.get_col(WORK_FLOW_MISSION)
+    mission_coll = workflow_mission_collection(my_db)
     model_associate_coll = my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)
     camera_coll = my_db.get_col("odin_device_camera_edit")
     equipment_col = my_db.get_col('odin_device_equip')
@@ -488,7 +489,7 @@ def queryControlTaskList():
     
     algorithm_col = my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)
     device_col = my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
-    mission_col = my_db.get_col(WORK_FLOW_MISSION)
+    mission_col = workflow_mission_collection(my_db)
     person_col = my_db.get_col(WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE)
     mission_group_col = my_db.get_col(WORK_FLOW_MISSION_PERSONNELGROUP_ASSOCIATE)
     person_group_col = my_db.get_col(WORK_FLOW_PERSONNEL_PERSONNELGROUP_ASSOCIATE)
@@ -601,7 +602,7 @@ def modifyControlTask():
     equipEntities = params.get('equipEntities',None)
 
     my_db = ToMongo('wavedevice')
-    mission_col = my_db.get_col(WORK_FLOW_MISSION)
+    mission_col = workflow_mission_collection(my_db)
     generate_log(request,db=my_db)
     mission_update = {"emergency_audio":emergencyAudio,"emergency_interval_time":emergencyIntervalTime,"emergency_level":emergencyLevel,"emergency_music_close_method":emergencyMusicCloseMethod,
                     "mission_start_time":missionStartTime,"mission_end_time":missionEndTime,
@@ -651,7 +652,7 @@ def addControlTaskInsightModelAlgorithm():
     my_db = ToMongo('wavedevice')
     generate_log(request,db=my_db)
     old_items = my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE).find({'mission_id':controlId})
-    organizationId = my_db.get_col(WORK_FLOW_MISSION).find_one({'mission_id':controlId})['organization_id']
+    organizationId = find_workflow_mission_by_mission_id(my_db, controlId)['organization_id']
 
     old_algs = []  
     if old_items.count() != 0:    
@@ -734,7 +735,7 @@ def modifyControlTaskIsActive():
 
     my_db = ToMongo('wavedevice')
     generate_log(request,db=my_db)
-    item = my_db.get_col(WORK_FLOW_MISSION).find_one({'mission_id':controlID})
+    item = find_workflow_mission_by_mission_id(my_db, controlID)
 
     
     if  item:
@@ -834,7 +835,7 @@ def queryControlTaskList2():
     control_col = my_db.get_col('odin_business_control_manage').find(query)
     algorithm_col = my_db.get_col(WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE)
     device_col = my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
-    mission_col = my_db.get_col(WORK_FLOW_MISSION)
+    mission_col = workflow_mission_collection(my_db)
     person_col = my_db.get_col(WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE)
     cam_col = my_db.get_col('odin_device_camera_edit')
     constant_col = my_db.get_col(WORK_FLOW_ALGORITHM_CONSTANT)

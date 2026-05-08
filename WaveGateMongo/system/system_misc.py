@@ -21,6 +21,7 @@ from system.crossroads_model import *
 from system.crossroads_controller import start_listen_radar_v2
 
 import Utils.edgebox_repo  # noqa: F401
+from edgebox_db.workflow_mission_queries import workflow_mission_collection
 from edgebox_db.mongo_collections import (
     WORK_FLOW_ALGORITHM_CONSTANT,
     WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,
@@ -501,7 +502,7 @@ def get_control_info(my_db:ToMongo):
     device_asso_col = my_db.get_col(WORK_FLOW_MISSION_DEVICE_ASSOCIATE)
     personel_asso_col = my_db.get_col(WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE)
     personel_group_asso_col = my_db.get_col(WORK_FLOW_MISSION_PERSONNELGROUP_ASSOCIATE)
-    mission_col = my_db.get_col(WORK_FLOW_MISSION)
+    mission_col = workflow_mission_collection(my_db)
 
     controlManageEntity = {}
     controlManageEntity['algorithmInstances'] = []
