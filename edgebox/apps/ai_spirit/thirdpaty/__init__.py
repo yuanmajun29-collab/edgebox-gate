@@ -1,1 +1,1 @@
-from edgebox.shared.mongo_line.thirdpaty import third_bp
+../../../shared/wave_app_common/thirdpaty/__init__.py

@@ -1,1 +1,1 @@
-from .home_route import  bp as home_bp
+../../../shared/wave_app_common/home/__init__.py

@@ -1,0 +1,202 @@
+
+消息头说明
+
+#! 01 55 xx 0000000000 00000 00000000000000000000000000000000
+
+#! 消息开始头
+01 协议版本
+55 协议头长度
+xx 协议类型：00：普通消息  01：请求消息  02：响应消息
+0000000000 消息体长度
+00000 消息类型 详见下方 消息类型说明
+00000000000000000000000000000000 消息唯一ID 普通消息全部为0  请求消息生成唯一ID 相应消息返回请求消息的唯一ID
+
+
+消息类型说明
+03000 呼吸包                         	空                       空
+03001 边缘设备信息 （获取AI服务器/盒子信息）       	      	空                   ServerInfo
+03002 边缘设备以绑定流查询		空	        [VideoInfo,VideoInfo]
+03003 多路视频绑定（绑定摄像头）	      [VideoInfo,VideoInfo]         MsgResponse
+03004 发送全量摄像头数据
+03005 照片特征点（图片人脸特征提取请求）  [FaceFeatureExtractRequest,FaceFeatureExtractRequest]      
+03006 同步数据下发给算法
+03007 摄像设备变更下发给算法
+03008 照片特征点（图片人脸特征提取回复)  [FaceFeatureExtract,FaceFeatureExtract]
+04002 上报告警信息        算法输出警报信息
+
+
+ServerInfo
+{
+    "server_name": "xxxxxxxxxxxxxxxx",
+    "algorithm": "00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000",
+    "max_camera": 8,
+    "server_version": "0.0.0.0"
+}
+
+下发给算法人脸照
+FaceFeatureExtractRequest
+{
+    "image_id": "xxxxx",
+    "image_w": 100,
+    "image_h": 200,
+    "image_type": "图片类型",
+    "image_data": "图片数据base64"
+}
+
+算法上报人脸特征点
+FaceFeatureExtract
+{
+    "image_id": "xxxxx",
+    "x": 1,
+    "y": 2,
+    "w": 3,
+    "h": 4,
+    "face_features": [
+        0.00001,
+        0.00001,
+        0.00001,
+        0.00001,
+        0.00001,
+        0.00001,
+        0.00001,
+        0.00001
+    ]
+}
+
+VideoInfo
+{
+    "url": "rtsp://admin@wavecamera1:xxx.xxx.xxx.xxx",
+    "device_id": "xxxxxxxxxxxxxx",
+    "algorithm": "00000000 11100000 00000000 00000000 00000000 00000000 00000000 00000000",
+    "algorithm_list": [
+        {
+            "algorithm": "12",
+            "rate_num": 25,
+            "duration_num": 10,
+            "roi_list": [
+                {
+                    "source_width": 744,
+                    "source_height": 446,
+                    "points": [
+                        123,
+                        245,
+                        123,
+                        245
+                    ]
+                },
+                {
+                    "source_width": 744,
+                    "source_height": 446,
+                    "points": [
+                        123,
+                        245,
+                        123,
+                        245
+                    ]
+                }
+            ],
+            "person_list": [
+                {
+                    "type": "0是黑名单，1为白名单",
+                    "person_id": "value",
+                    "face_features": [
+                        0.00001,
+                        0.00001,
+                        0.00001,
+                        0.00001
+                    ]
+                }
+            ]
+        },
+        {
+            "algorithm": "3",
+            "rate_num": 25,
+            "duration_num": 10,
+            "roi_list": [
+                {
+                    "source_width": 744,
+                    "source_height": 446,
+                    "points": [
+                        123,
+                        245,
+                        123,
+                        245
+                    ]
+                },
+                {
+                    "source_width": 744,
+                    "source_height": 446,
+                    "points": [
+                        123,
+                        245,
+                        123,
+                        245
+                    ]
+                }
+            ],
+            "person_list": [
+                {
+                    "type": "0是黑名单，1为白名单",
+                    "person_id": "value",
+                    "face_features": [
+                        0.00001,
+                        0.00001,
+                        0.00001,
+                        0.00001
+                    ]
+                }
+            ]
+        }
+    ]
+}
+//算法输出警报信息
+{
+    "url": "xxxxxxxxxxxxxxxx",
+    "device_id": "xxxxxxxxxxxxxx",
+    "img_w": 1920,
+    "img_h": 1080,
+    "video_w": 2920,
+    "video_h": 1080,
+    "img_data_jpeg": "value",
+    "algorithm_time": "2021-09-09 11:34:00 555",
+    "send_time": "2021-09-09 11:34:00 999",
+    "algorithm": "00000000 11000000 00000000 00000000 00000000 00000000 00000000 00000000",
+    "target_list": [
+        [
+            {
+                "x": "value",
+                "y": "value",
+                "w": "value",
+                "h": "value",
+                "type": "value",
+                "person_id": "value"
+            },
+            {
+                "x": "value",
+                "y": "value",
+                "w": "value",
+                "h": "value",
+                "type": "value",
+                "person_id": "value"
+            }
+        ],
+        [
+            {
+                "x": "value",
+                "y": "value",
+                "w": "value",
+                "h": "value",
+                "type": "value",
+                "person_id": "value"
+            },
+            {
+                "x": "value",
+                "y": "value",
+                "w": "value",
+                "h": "value",
+                "type": "value",
+                "person_id": "value"
+            }
+        ]
+    ]
+}

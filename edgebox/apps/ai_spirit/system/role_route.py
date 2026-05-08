@@ -1,1 +1,1 @@
-from edgebox.shared.mongo_line.system.role_route import *  # noqa: F401,F403
+../../../shared/wave_app_common/system/role_route.py

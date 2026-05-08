@@ -1,1 +1,1 @@
-from edgebox.shared.algorith_server.redis_connect import *  # noqa: F401,F403
+../../../shared/wave_app_common/algorith_server/redis_connect.py

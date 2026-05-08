@@ -1,1 +1,1 @@
-from edgebox.shared.mongo_line.emergency.db_router import *  # noqa: F401,F403
+../../../shared/wave_app_common/emergency/db_router.py
