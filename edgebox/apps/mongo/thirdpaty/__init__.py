@@ -1,1 +1,1 @@
-from .third_route import  bp as third_bp
+from edgebox.shared.mongo_line.thirdpaty import third_bp
