@@ -1,5 +1,7 @@
 """
-与具体产品线解耦、可共用的实现（当前主要为 ``algorith_server`` 侧无应用上下文的模块）。
+与具体产品线解耦、可共用的实现：
 
-各 app 在 ``algorith_server`` 下保留与原模块同名的薄重导出文件，避免批量修改业务 import 路径。
+- ``algorith_server``：Redis 与二进制协议等（各 app 下同名薄重导出）
+- ``mongo_line``：``apps/mongo`` 与 ``apps/ai_spirit`` 共用的日志映射与 JWT 工具函数
+- ``repo_path`` / ``edgebox_repo_entry``：仓库根 ``sys.path`` 引导（各 app ``Utils/edgebox_repo`` 符号链接至此）
 """
