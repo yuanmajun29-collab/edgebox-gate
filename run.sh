@@ -4,7 +4,7 @@
 #   ./run.sh start                    # 默认 mongo（或环境变量 EDGEBOX_PROFILE）
 #   ./run.sh start ai_spirit          # action 在前
 #   ./run.sh energy stop              # profile 在前
-# 与 python -m edgebox_products 的 profile 一致: mongo | ai_spirit | energy
+# profile（mongo | ai_spirit | energy）与仓库内 products/<产品线>/ 目录对应
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT_DIR" || exit 1
