@@ -3,7 +3,7 @@ from threading import Thread
 
 from flask import Blueprint
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.mongo_collections import WORK_FLOW_ALGORITHM_CONSTANT
+from edgebox.db.mongo_collections import WORK_FLOW_ALGORITHM_CONSTANT
 from Utils.Utils import *
 from Utils.db import *
 from Utils.jwt_verify import *

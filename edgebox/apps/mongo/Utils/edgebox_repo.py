@@ -1,4 +1,4 @@
-"""Put monorepo root on sys.path so ``edgebox_db`` / ``edgebox_config`` resolve."""
+"""Put monorepo root on sys.path so ``edgebox.db`` / ``edgebox.config`` resolve."""
 import sys
 from pathlib import Path
 
@@ -6,9 +6,9 @@ from pathlib import Path
 def _repo_root() -> Path:
     p = Path(__file__).resolve().parent
     for anc in [p, *p.parents]:
-        if (anc / "edgebox_config").is_dir():
+        if (anc / "edgebox" / "config").is_dir():
             return anc
-    raise RuntimeError("edgebox-gate root not found (missing edgebox_config/)")
+    raise RuntimeError("edgebox-gate root not found (missing edgebox/config/)")
 
 
 _ROOT = _repo_root()

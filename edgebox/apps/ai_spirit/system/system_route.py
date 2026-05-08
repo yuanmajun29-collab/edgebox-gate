@@ -15,7 +15,7 @@ from emergency.db_router import transfer_img_url
 import traceback
 
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.mongo_collections import (
+from edgebox.db.mongo_collections import (
     WORK_FLOW_ALGORITHM_CONSTANT,
 )
 

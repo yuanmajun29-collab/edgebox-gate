@@ -4,7 +4,7 @@
 #   ./run.sh start                    # 默认 mongo（或环境变量 EDGEBOX_PROFILE）
 #   ./run.sh start ai_spirit          # action 在前
 #   ./run.sh energy stop              # profile 在前
-# profile（mongo | ai_spirit | energy）与仓库内 products/<产品线>/ 目录对应
+# profile（mongo | ai_spirit | energy）与 edgebox/apps/<产品线>/ 对应
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT_DIR" || exit 1
@@ -26,9 +26,9 @@ resolve_profile() {
 
 profile_to_relpath() {
     case "$1" in
-    mongo) echo "products/mongo/app.py" ;;
-    ai_spirit) echo "products/ai_spirit/app.py" ;;
-    energy) echo "products/energy/app.py" ;;
+    mongo) echo "edgebox/apps/mongo/app.py" ;;
+    ai_spirit) echo "edgebox/apps/ai_spirit/app.py" ;;
+    energy) echo "edgebox/apps/energy/app.py" ;;
     *) echo "" ;;
     esac
 }

@@ -1,6 +1,6 @@
 from flask import Blueprint
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.mission_queries import control_mission_collection
+from edgebox.db.mission_queries import control_mission_collection
 from Utils.db import ToMongo
 import uuid
 import calendar

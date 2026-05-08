@@ -25,11 +25,11 @@ from config import EMERGENCY_IMG_PATH,PLATFORM_MINIO_URL
 import sys
 import Utils.logger as logger
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.mongo_collections import (
+from edgebox.db.mongo_collections import (
     CONTROL_DEVICE_ALGORITHM_ASSOCIATE,
     WORK_FLOW_ALGORITHM_CONSTANT,
 )
-from edgebox_db.mission_queries import (
+from edgebox.db.mission_queries import (
     control_mission_collection,
     find_control_mission_by_control_id,
 )

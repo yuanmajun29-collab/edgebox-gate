@@ -9,8 +9,8 @@ from system.system_misc import database_to_dict
 from system.sys_config import constant_database,constant_web
 
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.workflow_mission_queries import workflow_mission_collection
-from edgebox_db.mongo_collections import (
+from edgebox.db.workflow_mission_queries import workflow_mission_collection
+from edgebox.db.mongo_collections import (
     WORK_FLOW_ALGORITHM_CONSTANT,
     WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,
     WORK_FLOW_MISSION_DEVICE_ASSOCIATE,

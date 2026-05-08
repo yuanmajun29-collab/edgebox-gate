@@ -1,7 +1,7 @@
 """
 Default configuration shared by WaveGateMongo, web-ai-spirit, and wave-energy-station.
 
-Products should ``from edgebox_config.base import *`` then set overrides (paths,
+Products should ``from edgebox.config.base import *`` then set overrides (paths,
 ``BASE_INFO['web_version']``, ``NetAgreementType``, optional blueprint flags, etc.).
 """
 import os

@@ -11,12 +11,12 @@ from Utils.datacfg import *
 import Utils.logger as logger
 from config import PERSON_IMG_URL, FACE_IDENT_URL, EMERGENCY_IMG_PATH, DISK_PATH,BASE_INFO
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.mongo_collections import (
+from edgebox.db.mongo_collections import (
     CONTROL_DEVICE_ALGORITHM_ASSOCIATE,
     CONTROL_MANAGE_MISSION,
     WORK_FLOW_ALGORITHM_CONSTANT,
 )
-from edgebox_db.mission_queries import control_mission_collection
+from edgebox.db.mission_queries import control_mission_collection
 from algorith_server.Alibabasms import SendSmsResqueset
 
 mainlogger = logger.getLogger("main")

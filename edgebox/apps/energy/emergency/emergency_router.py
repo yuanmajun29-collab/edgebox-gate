@@ -1,7 +1,7 @@
 from flask import Blueprint
 from Utils.db import ToMongo
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.mission_queries import find_control_mission_by_control_id, find_control_mission_by_name
+from edgebox.db.mission_queries import find_control_mission_by_control_id, find_control_mission_by_name
 from .db_router import EventImageDBAPI, transfer_img_url
 import uuid
 from Utils.Utils import generate_log

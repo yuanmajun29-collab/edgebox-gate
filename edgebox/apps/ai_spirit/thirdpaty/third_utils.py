@@ -4,7 +4,7 @@ from system.system_misc import database_to_dict
 from system.sys_config import *
 
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.mongo_collections import (
+from edgebox.db.mongo_collections import (
     WORK_FLOW_ALGORITHM_CONSTANT,
 )
 

@@ -15,7 +15,7 @@ import Utils.glv as glv
 from .underlay_misc import UnderlayImageDBAPI,restartAlg
 
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.mongo_collections import (
+from edgebox.db.mongo_collections import (
     WORK_FLOW_MISSION_DEVICE_ASSOCIATE,
 )
 

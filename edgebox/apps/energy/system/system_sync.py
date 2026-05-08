@@ -2,7 +2,7 @@ import json
 import requests
 from config import BASE_INFO
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.mongo_collections import (
+from edgebox.db.mongo_collections import (
     CONTROL_DEVICE_ALGORITHM_ASSOCIATE,
     CONTROL_MANAGE_MISSION,
     WORK_FLOW_ALGORITHM_CONSTANT,

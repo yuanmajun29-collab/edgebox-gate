@@ -14,7 +14,7 @@ from threading import Thread,Timer
 import Utils.logger as logger
 
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.mongo_collections import (
+from edgebox.db.mongo_collections import (
     WORK_FLOW_ALGORITHM_CONSTANT,
     WORK_FLOW_INSIGHT_MODEL_ALGORITHM_INSTANCE,
     WORK_FLOW_MISSION,

@@ -17,7 +17,7 @@ from Utils.facedb import FaceImageDBAPI,FaceFeatureDBAPI,verify_social_num
 import Utils.glv as glv
 
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.mongo_collections import (
+from edgebox.db.mongo_collections import (
     WORK_FLOW_MISSION_PERSONNEL_ASSOCIATE,
     WORK_FLOW_PERSONNEL,
     WORK_FLOW_PERSONNELGROUP,

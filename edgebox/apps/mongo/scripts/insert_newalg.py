@@ -3,7 +3,7 @@ sys.path.append("..")
 from Utils.db import ToMongo
 
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.mongo_collections import (
+from edgebox.db.mongo_collections import (
     WORK_FLOW_ALGORITHM_CONSTANT,
 )
 

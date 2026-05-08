@@ -10,7 +10,7 @@ from system.sys_config import advise_database,advise_web
 from Utils.jwt_verify import *
 
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.workflow_mission_queries import workflow_mission_collection
+from edgebox.db.workflow_mission_queries import workflow_mission_collection
 
 bp = Blueprint("home",__name__, url_prefix='/net-web')
 @bp.route('/control/getMisstionCount', methods=['GET','POST'])

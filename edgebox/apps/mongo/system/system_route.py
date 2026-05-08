@@ -17,7 +17,7 @@ from device.konad_service import KNDserver
 from device.temp_service import TempServer
 
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.mongo_collections import (
+from edgebox.db.mongo_collections import (
     WORK_FLOW_ALGORITHM_CONSTANT,
 )
 

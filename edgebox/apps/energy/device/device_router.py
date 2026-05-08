@@ -1,7 +1,7 @@
 from flask import Blueprint, Flask
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.mission_queries import control_mission_collection
-from edgebox_db.mongo_collections import CONTROL_DEVICE_ALGORITHM_ASSOCIATE
+from edgebox.db.mission_queries import control_mission_collection
+from edgebox.db.mongo_collections import CONTROL_DEVICE_ALGORITHM_ASSOCIATE
 from Utils.db import *
 import cv2
 from threading import Thread

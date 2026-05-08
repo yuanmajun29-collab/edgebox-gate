@@ -10,7 +10,7 @@ from .system_sync import *
 from .sync_model import SyncTimer,init_box_model,init_param,check_service_addr
 from config import SYSTEMLOGO_URL
 import Utils.edgebox_repo  # noqa: F401
-from edgebox_db.mongo_collections import WORK_FLOW_ALGORITHM_CONSTANT
+from edgebox.db.mongo_collections import WORK_FLOW_ALGORITHM_CONSTANT
 from Utils.device_misc import make_response_image_jpeg
 import Utils.glv as glv
 from emergency.db_router import transfer_img_url
