@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import threading
 import yaml
@@ -12,13 +14,29 @@ initLock = threading.Lock()
 rootLoggerInitialized = False
 
 
+_DEPLOY_ROOT = "/data/ebox/wavegate/wave-energy-station"
+_LOGGING_YAML_CANDIDATES = (
+    os.path.join(_DEPLOY_ROOT, "Utils", "logging.yaml"),
+    os.path.join(_DEPLOY_ROOT, "utils", "logging.yaml"),
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "logging.yaml"),
+)
+
+
+def resolve_logging_config_path() -> str | None:
+    """部署目录优先 ``Utils``，其次旧版 ``utils``，最后是仓库内 ``Utils/logging.yaml``。"""
+    for p in _LOGGING_YAML_CANDIDATES:
+        if os.path.isfile(p):
+            return p
+    return None
+
+
 log_format = "%(asctime)s %(process)d-%(thread)d %(name)s [%(levelname)s] %(message)s"
 level = logging.DEBUG
 console_log = True
 
-def setup_logging(default_path='/data/ebox/wavegate/wave-energy-station/Utils/logging.yaml', default_level=logging.INFO):
-    path = default_path
-    if os.path.exists(path):
+def setup_logging(default_path: str | None = None, default_level=logging.INFO):
+    path = default_path if default_path is not None else resolve_logging_config_path()
+    if path and os.path.isfile(path):
         with open(path, 'rt') as f:
             config = yaml.safe_load(f.read())
         logging.config.dictConfig(config)
@@ -31,13 +49,16 @@ def init_handler(handler):
 
 
 def init_logger(logger):
-    setup_logging("/data/ebox/wavegate/wave-energy-station/Utils/logging.yaml")
+    setup_logging(None)
+
 
 def initialize():
     global rootLoggerInitialized
     with initLock:
         if not rootLoggerInitialized:
-            filetime = os.path.getmtime("/data/ebox/wavegate/wave-energy-station/Utils/logging.yaml")
+            path = resolve_logging_config_path()
+            if path is not None:
+                os.path.getmtime(path)
             init_logger(logging.getLogger())
             rootLoggerInitialized = True
 
